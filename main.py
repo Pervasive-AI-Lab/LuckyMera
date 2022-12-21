@@ -1,11 +1,18 @@
+
+import json
 import math
 import gym
-from gym.spaces import Dict
+from gym.spaces import Space, Box, Discrete, Dict, Tuple, MultiBinary, MultiDiscrete
+import minihack
+from nle import nethack
 from typing import Dict
 from queue import PriorityQueue
 import time
 import sys
 import numpy
+from secret_passage_modules import HiddenRoom, HiddenCorridor
+from reach_modules import Gold, Unseen, Horizon
+from general_modules import Pray, Elbereth, Run, Break,Fight, Eat, StairsDescent, StairsAscent, ExploreClosest
 
 numpy.set_printoptions(threshold=sys.maxsize)
 
@@ -72,8 +79,8 @@ class GameWhisperer:
         self.fast_mode = fast_mode
         self.stuck_counter = 0
         self.hard_search_num = 0
-        # if not self.fast_mode:
-        # env.render()
+        #if not self.fast_mode:
+            #env.render()
 
     def calculate_risk(self, y, x):
         touched = []
@@ -113,37 +120,85 @@ class GameWhisperer:
             self.update_riskmap()
             self.last_risk_update = self.bl_stats[20]
 
-    def crop_printer(self, obs):
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1]], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
-
     def debug_crop(self):
-        self.crop_printer(self.char_obs)
-        self.crop_printer(self.color_obs)
-        self.crop_printer(self.glyph_obs)
+        print(self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
+              self.char_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
+              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
+              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
+        print(self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
+              self.char_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
+              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
+              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
+        print(self.char_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
+              self.char_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
+              self.char_obs[self.a_yx[0]][self.a_yx[1]], " ",
+              self.char_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
+              self.char_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
+        print(self.char_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
+              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
+              self.char_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
+              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
+              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
+        print(self.char_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
+              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
+              self.char_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
+              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
+              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+
+        print(self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
+              self.color_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
+              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
+              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
+        print(self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
+              self.color_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
+              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
+              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
+        print(self.color_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
+              self.color_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
+              self.color_obs[self.a_yx[0]][self.a_yx[1]], " ",
+              self.color_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
+              self.color_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
+        print(self.color_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
+              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
+              self.color_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
+              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
+              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
+        print(self.color_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
+              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
+              self.color_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
+              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
+              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+
+        print(self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
+              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
+              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
+              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
+        print(self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
+              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
+              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
+              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
+        print(self.glyph_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
+              self.glyph_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
+              self.glyph_obs[self.a_yx[0]][self.a_yx[1]], " ",
+              self.glyph_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
+              self.glyph_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
+        print(self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
+              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
+              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
+              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
+              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
+        print(self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
+              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
+              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
+              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
+              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+
         print(self.exception)
 
     def glyph_cooldown(self, glyph):
@@ -169,7 +224,7 @@ class GameWhisperer:
 
     def find(self, condition, args):
         frontier = list()
-        looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
+        looked_mat = [[0 for i in range(self.size_x)] for j in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
         found = False
 
@@ -193,7 +248,7 @@ class GameWhisperer:
 
     def find_far(self, condition):
         frontier = list()
-        looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
+        looked_mat = [[0 for i in range(self.size_x)] for j in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
 
         best = None
@@ -422,7 +477,7 @@ class GameWhisperer:
                 char = glyph[0]
                 color = glyph[1]
                 if (self.char_obs[next[0]][next[1]] == char and self.color_obs[next[0]][
-                        next[1]] == color) or self.is_doorway(next[0], next[1]):
+                    next[1]] == color) or self.is_doorway(next[0], next[1]):
                     same_glyph_count += 1
         if same_glyph_count < 2:
             return True
@@ -525,7 +580,7 @@ class GameWhisperer:
         self.update_obs()
 
     def do_it(self, x, direction):
-        # print(self.bl_stats)
+        #print(self.bl_stats)
         self.old_turn = self.bl_stats[20]
         rew = 0
         done = False
@@ -617,7 +672,9 @@ class GameWhisperer:
                     self.shop_tiles.append(tile)
 
         if ((self.parsed_message.__contains__("Welcome") and self.parsed_message.__contains__(
-                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) and not 0 <= self.bl_stats[20] <= 5:
+                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) and not 0 <= \
+                                                                                                       self.bl_stats[
+                                                                                                           20] <= 5:
             self.shop_propagation(self.a_yx)
 
         if self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) <= 0.5 and not self.safe_play:
@@ -646,7 +703,8 @@ class GameWhisperer:
         for near in self.neighbors_8_dir(tile[0], tile[1]):
             char = self.char_obs[near[0]][near[1]]
             if char == 124 or char == 45 or char == 35 or char == 32 or (
-                    near[0] == self.a_yx[0] and near[1] == self.a_yx[1]):  # or ([58,59,38,39,44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122) :
+                    near[0] == self.a_yx[0] and near[1] == self.a_yx[
+                1]):  # or ([58,59,38,39,44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122) :
                 continue
             elif not self.shop_tiles.__contains__(near):
                 self.shop_tiles.append(near)
@@ -980,7 +1038,8 @@ class DungeonWalker:
 
 # metodo che pianifica la task da eseguire in un dato stato
 def planning(game, tasks_prio, task_map):
-    if game.get_new_turn() == game.get_old_turn():
+
+    if game.get_new_turn() == game.get_old_turn() :
         game.stuck()
     else:
         game.reset_stuck_counter()
@@ -1081,3 +1140,79 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
 
 def go_back(num_lines):  # funzione per sovrascrivere lo schermo attuale
     print("\033[%dA" % num_lines)
+
+
+def start_bot():
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    print("\nJudy is looking for the Amulet of Yendor on the map ...\n")
+
+    exec_mode = config['fast_mode']
+    mode = False
+    if exec_mode == "on":
+        mode = True
+        print("\nFast_Mode : ON")
+    elif exec_mode == "off":
+        print("\nFast_Mode : OFF")
+    else:
+        print("\nFast_Mode can only be \"on\" or \"off\" -> value set to default : OFF")
+    time.sleep(0.5)
+
+    attempts = 100
+    try:
+        attempts = int(config['attempts'])
+        print("Attempts : ", attempts)
+    except:
+        print("Attempts must be an int value -> value set to default : ", attempts)
+        attempts = 100
+    time.sleep(0.5)
+
+    game = GameWhisperer(mode)
+    dungeon_walker = DungeonWalker(game)
+
+    task_prio = config['task_prio_list']
+    task_map = {}
+    for i in range(0, len(task_prio)):
+        task = task_prio[i]
+        if task == "pray":
+            task_map[task] = Pray(dungeon_walker, game, task)
+        elif task == "take_a_break":
+            task_map[task] = Break(dungeon_walker, game, task)
+        elif task == "engrave_elbereth":
+            task_map[task] = Elbereth(dungeon_walker, game, task)
+        elif task == "run_for_your_life":
+            task_map[task] = Run(dungeon_walker, game, task)
+        elif task == "close_monster_fight":
+            task_map[task] = Fight(dungeon_walker, game, task)
+        elif task == "time_of_the_lunch":
+            task_map[task] = Eat(dungeon_walker, game, task)
+        elif task == "greed_of_gold":
+            task_map[task] = Gold(dungeon_walker, game, task)
+        elif task == "stairs_descent":
+            task_map[task] = StairsDescent(dungeon_walker, game, task)
+        elif task == "stairs_ascent":
+            task_map[task] = StairsAscent(dungeon_walker, game, task)
+        elif task == "reach_closest_explorable":
+            task_map[task] = ExploreClosest(dungeon_walker, game, task)
+        elif task == "reach_horizon":
+            task_map[task] = Horizon(dungeon_walker, game, task)
+        elif task == "search_hidden_room":
+            task_map[task] = HiddenRoom(dungeon_walker, game, task)
+        elif task == "explore_unseen":
+            task_map[task] = Unseen(dungeon_walker, game, task)
+        elif task == "search_hidden_corridor":
+            task_map[task] = HiddenCorridor(dungeon_walker, game, task)
+        print(task)
+        time.sleep(0.4)
+
+    print("\nJudy is ready for YASD ...")
+    print("\n\n")
+    time.sleep(1)
+
+    return dungeon_walker, game, task_prio, task_map, attempts
+
+
+dungeon_walker, game, logic, map, attempts = start_bot()
+
+main_logic(dungeon_walker, game, logic, map, attempts)
