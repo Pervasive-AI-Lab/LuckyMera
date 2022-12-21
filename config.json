@@ -1,0 +1,21 @@
+{"task_prio_list": [
+
+"pray",
+"take_a_break",
+"engrave_elbereth",
+"run_for_your_life",
+"close_monster_fight",
+"time_of_the_lunch",
+"greed_of_gold",
+"stairs_descent",
+"stairs_ascent",
+"reach_closest_explorable",
+"reach_horizon",
+"search_hidden_room",
+"explore_unseen",
+"search_hidden_corridor"
+],
+
+"fast_mode": "on",
+"attempts": "100"
+}
