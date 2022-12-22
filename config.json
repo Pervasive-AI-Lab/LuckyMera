@@ -11,8 +11,8 @@
 "stairs_ascent",
 "reach_closest_explorable",
 "reach_horizon",
-"search_hidden_room",
 "explore_unseen",
+"search_hidden_room",
 "search_hidden_corridor"
 ],
 
