@@ -115,85 +115,37 @@ class GameWhisperer:
             self.update_riskmap()
             self.last_risk_update = self.bl_stats[20]
 
+    def crop_printer(self, obs):
+        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
+              obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
+              obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
+              obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
+        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
+              obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
+              obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
+              obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
+              obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
+        print(obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
+              obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
+              obs[self.a_yx[0]][self.a_yx[1]], " ",
+              obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
+              obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
+        print(obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
+              obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
+              obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
+              obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
+              obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
+        print(obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
+              obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
+              obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
+              obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
+              obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+
     def debug_crop(self):
-        print(self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              self.char_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              self.char_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(self.char_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              self.char_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              self.char_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(self.char_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              self.char_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              self.char_obs[self.a_yx[0]][self.a_yx[1]], " ",
-              self.char_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              self.char_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(self.char_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              self.char_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              self.char_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(self.char_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              self.char_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              self.char_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
-
-        print(self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              self.color_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              self.color_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(self.color_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              self.color_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              self.color_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(self.color_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              self.color_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              self.color_obs[self.a_yx[0]][self.a_yx[1]], " ",
-              self.color_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              self.color_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(self.color_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              self.color_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              self.color_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(self.color_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              self.color_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              self.color_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
-
-        print(self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(self.glyph_obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              self.glyph_obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(self.glyph_obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              self.glyph_obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              self.glyph_obs[self.a_yx[0]][self.a_yx[1]], " ",
-              self.glyph_obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              self.glyph_obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              self.glyph_obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              self.glyph_obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
-
+        self.crop_printer(self.char_obs)
+        self.crop_printer(self.color_obs)
+        self.crop_printer(self.glyph_obs)
         print(self.exception)
 
     def glyph_cooldown(self, glyph):
@@ -219,7 +171,7 @@ class GameWhisperer:
 
     def find(self, condition, args):
         frontier = list()
-        looked_mat = [[0 for i in range(self.size_x)] for j in range(self.size_y)]
+        looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
         found = False
 
@@ -231,9 +183,9 @@ class GameWhisperer:
 
             nbh = self.neighbors_8_dir(current[0], current[1])
 
-            for next in nbh:
-                if looked_mat[next[0]][next[1]] == 0 and not frontier.__contains__(next):
-                    frontier.append(next)
+            for next_tile in nbh:
+                if looked_mat[next_tile[0]][next_tile[1]] == 0 and not frontier.__contains__(next_tile):
+                    frontier.append(next_tile)
             if len(frontier) > 0:
                 current = frontier.pop(0)
             else:
@@ -243,7 +195,7 @@ class GameWhisperer:
 
     def find_far(self, condition):
         frontier = list()
-        looked_mat = [[0 for i in range(self.size_x)] for j in range(self.size_y)]
+        looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
 
         best = None
@@ -256,9 +208,9 @@ class GameWhisperer:
 
             nbh = self.neighbors_8_dir(current[0], current[1])
 
-            for next in nbh:
-                if looked_mat[next[0]][next[1]] == 0 and not frontier.__contains__(next):
-                    frontier.append(next)
+            for next_tile in nbh:
+                if looked_mat[next_tile[0]][next_tile[1]] == 0 and not frontier.__contains__(next_tile):
+                    frontier.append(next_tile)
             if len(frontier) > 0:
                 current = frontier.pop(0)
             else:
@@ -462,17 +414,18 @@ class GameWhisperer:
         same_glyph_count = 0
         near = self.neighbors_8_dir(y, x)
         while len(near) > 0:
-            next = near.pop()
-            if cross and next[0] != y and next[1] != x:
+            next_tile = near.pop()
+            if cross and next_tile[0] != y and next_tile[1] != x:
                 continue
             if glyph is None:
-                if self.glyph_obs[next[0]][next[1]] == self.glyph_obs[y][x] or self.is_doorway(next[0], next[1]):
+                if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0],
+                                                                                                         next_tile[1]):
                     same_glyph_count += 1
             else:
                 char = glyph[0]
                 color = glyph[1]
-                if (self.char_obs[next[0]][next[1]] == char and self.color_obs[next[0]][
-                    next[1]] == color) or self.is_doorway(next[0], next[1]):
+                if (self.char_obs[next_tile[0]][next_tile[1]] == char and self.color_obs[next_tile[0]][
+                        next_tile[1]] == color) or self.is_doorway(next_tile[0], next_tile[1]):
                     same_glyph_count += 1
         if same_glyph_count < 2:
             return True
@@ -637,8 +590,8 @@ class GameWhisperer:
                 "Really attack"):
             self.yes()
         if self.parsed_message.__contains__("You are carrying too much to get through."):
-            next = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], x)
-            self.exception.append(next)
+            next_tile = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], x)
+            self.exception.append(next_tile)
             self.update_obs()
         if self.parsed_message.__contains__("What do you want to write with?"):
             self.current_obs, rew, done, info = env.step(106)  # -
@@ -667,9 +620,8 @@ class GameWhisperer:
                     self.shop_tiles.append(tile)
 
         if ((self.parsed_message.__contains__("Welcome") and self.parsed_message.__contains__(
-                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) and not 0 <= \
-                                                                                                       self.bl_stats[
-                                                                                                           20] <= 5:
+                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) \
+                and not 0 <= self.bl_stats[20] <= 5:
             self.shop_propagation(self.a_yx)
 
         if self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) <= 0.5 and not self.safe_play:
@@ -685,10 +637,10 @@ class GameWhisperer:
             self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
             if x == 75:  # it was a search
                 self.search_map[self.a_yx[0]][self.a_yx[1]] = 1
-                for next in self.neighbors_8_dir(self.a_yx[0], self.a_yx[1]):
-                    self.search_map[next[0]][next[1]] = 1
+                for next_tile in self.neighbors_8_dir(self.a_yx[0], self.a_yx[1]):
+                    self.search_map[next_tile[0]][next_tile[1]] = 1
         if not self.fast_mode:  # and x != 10:
-            #go_back(27)
+            # go_back(27)
             env.render()
             time.sleep(0)
         self.new_turn = self.bl_stats[20]
@@ -699,7 +651,7 @@ class GameWhisperer:
             char = self.char_obs[near[0]][near[1]]
             if char == 124 or char == 45 or char == 35 or char == 32 or (
                     near[0] == self.a_yx[0] and near[1] == self.a_yx[
-                1]):  # or ([58,59,38,39,44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122) :
+                    1]):  # or ([58,59,38,39,44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122) :
                 continue
             elif not self.shop_tiles.__contains__(near):
                 self.shop_tiles.append(near)
@@ -731,22 +683,22 @@ class GameWhisperer:
         return move
 
     @staticmethod
-    def inverse_move_translator(from_y, from_x, dir):
-        if dir == 0:
+    def inverse_move_translator(from_y, from_x, direction):
+        if direction == 0:
             return from_y - 1, from_x
-        elif dir == 4:
+        elif direction == 4:
             return from_y - 1, from_x + 1
-        elif dir == 1:
+        elif direction == 1:
             return from_y, from_x + 1
-        elif dir == 5:
+        elif direction == 5:
             return from_y + 1, from_x + 1
-        elif dir == 2:
+        elif direction == 2:
             return from_y + 1, from_x
-        elif dir == 6:
+        elif direction == 6:
             return from_y + 1, from_x - 1
-        elif dir == 3:
+        elif direction == 3:
             return from_y, from_x - 1
-        elif dir == 7:
+        elif direction == 7:
             return from_y - 1, from_x - 1
 
     def reset_game(self):
@@ -942,7 +894,8 @@ class DungeonWalker:
         self.game = game
 
     # euristica per il calcolo della distanza tra due caselle della griglia 8-direzionale
-    def h_octile_distance(self, ay, ax, oy, ox):
+    @staticmethod
+    def h_octile_distance(ay, ax, oy, ox):
         x_d = abs(ax - ox)
         y_d = abs(ay - oy)
         return (1.414 * min(x_d, y_d)) + abs(x_d - y_d)
@@ -967,13 +920,13 @@ class DungeonWalker:
             if current == (oy, ox):  # abbiamo raggiunto il goal
                 break
             near = self.game.neighbors(current[0][0], current[0][1], safe)
-            for next in near:  # per cella adiacente alla corrente
+            for next_tile in near:  # per cella adiacente alla corrente
                 new_cost = cost_so_far[current[0]] + 1
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost + self.h_octile_distance(next[0], next[1], oy, ox)
-                    frontier.put((next, priority))
-                    came_from[next] = current[0]
+                if next_tile not in cost_so_far or new_cost < cost_so_far[next_tile]:
+                    cost_so_far[next_tile] = new_cost
+                    priority = new_cost + self.h_octile_distance(next_tile[0], next_tile[1], oy, ox)
+                    frontier.put((next_tile, priority))
+                    came_from[next_tile] = current[0]
         return came_from, cost_so_far
 
     def path_finder(self, oy, ox, not_reach_diag, safe_play):
@@ -986,34 +939,35 @@ class DungeonWalker:
 
         came_from, cost_so_far = self.a_star(oy, ox, safe_play)
         cursor = (oy, ox)
-        next = None
+        next_tile = None
         while cursor is not None:
-            if next is not None:
+            if next_tile is not None:
 
-                if not_reach_diag and next[0] == oy and next[1] == ox and next[0] != cursor[0] and next[1] != cursor[1]:
+                if not_reach_diag and next_tile[0] == oy and next_tile[1] == ox and next_tile[0] != cursor[0] and \
+                        next_tile[1] != cursor[1]:
                     # il prossimo nodo è l'obbiettivo e non deve essere raggiunto in diagonale
-                    if next[0] > cursor[0] and next[1] > cursor[1]:  # y e x maggiori -> se
+                    if next_tile[0] > cursor[0] and next_tile[1] > cursor[1]:  # y e x maggiori -> se
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
                             yellow_brick_road.append(2)  # s
                             yellow_brick_road.append(1)  # e
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
                             yellow_brick_road.append(1)  # e
                             yellow_brick_road.append(2)  # s
-                    elif next[0] > cursor[0] and next[1] < cursor[1]:  # y maggiore e x minore -> sw
+                    elif next_tile[0] > cursor[0] and next_tile[1] < cursor[1]:  # y maggiore e x minore -> sw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
                             yellow_brick_road.append(2)  # s
                             yellow_brick_road.append(3)  # w
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
                             yellow_brick_road.append(3)  # w
                             yellow_brick_road.append(2)  # s
-                    elif next[0] < cursor[0] and next[1] < cursor[1]:  # y minore e x maggiore -> nw
+                    elif next_tile[0] < cursor[0] and next_tile[1] < cursor[1]:  # y minore e x maggiore -> nw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
                             yellow_brick_road.append(0)  # n
                             yellow_brick_road.append(3)  # w
                         elif self.game.is_walkable(cursor[0] - 1, cursor[1]):
                             yellow_brick_road.append(3)  # w
                             yellow_brick_road.append(0)  # n
-                    elif next[0] < cursor[0] and next[1] > cursor[1]:  # y minore e x minore -> ne
+                    elif next_tile[0] < cursor[0] and next_tile[1] > cursor[1]:  # y minore e x minore -> ne
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
                             yellow_brick_road.append(0)  # n
                             yellow_brick_road.append(1)  # e
@@ -1021,8 +975,8 @@ class DungeonWalker:
                             yellow_brick_road.append(1)  # e
                             yellow_brick_road.append(0)  # n
 
-                yellow_brick_road.append(self.game.move_translator(cursor[0], cursor[1], next[0], next[1]))
-            next = cursor
+                yellow_brick_road.append(self.game.move_translator(cursor[0], cursor[1], next_tile[0], next_tile[1]))
+            next_tile = cursor
             try:
                 cursor = came_from[cursor]
             except:

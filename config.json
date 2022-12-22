@@ -1,9 +1,9 @@
 {"task_prio_list": [
 
 "pray",
-"take_a_break",
 "engrave_elbereth",
 "run_for_your_life",
+"take_a_break",
 "close_monster_fight",
 "time_of_the_lunch",
 "greed_of_gold",
@@ -16,6 +16,6 @@
 "search_hidden_corridor"
 ],
 
-"fast_mode": "on",
-"attempts": "100"
+"fast_mode": "off",
+"attempts": "1"
 }
