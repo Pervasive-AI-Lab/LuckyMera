@@ -7,6 +7,12 @@ class Task:
 
     # condizione per interrompere con emergenza ciò che si sta facendo
     def eject_button(self):
+        """
+            function that controls whether the agent should quickly flee from the current plan
+
+            :return: TRUE -> if agent is not safe, FALSE -> elsewise
+        """
+
         if self.game.update_agent():
             self.game.update_obs()
             agent = self.game.get_agent_position()
@@ -18,12 +24,29 @@ class Task:
 
     @staticmethod
     def custom_contain(item_list, value):
+        """
+            function that checks if a given list contains a particular value
+
+            :param item_list: the list to be explored
+            :param value: the value searched in list's items
+            :return: TRUE -> if the list contain the given value, FALSE -> elsewise
+                     if TRUE, function returns the remaining part of the item found
+        """
+
         for item in item_list:
             if item[0] == value:
                 return True, (item[1], item[2])
         return False, (-1, -1)
 
     def surely_not_a_trap(self, y, x):
+        """
+            function that checks for traps on a sus tile
+
+            :param y: y value of the given tile
+            :param x: x value of the given tile
+            :return: TRUE -> if the sus tile is safe, FALSE -> elsewise
+        """
+
         for log in self.game.get_recently_killed():
             if log[2] == y and log[3] == x:
                 return True
@@ -31,6 +54,15 @@ class Task:
 
     # metodo per l'esecuzione di piani articolati
     def do_plan(self, plan):
+        """
+            function that perform multiple actions according to a given plan
+
+            :param plan: planned action list
+            :return: :return: the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
+        """
+
         size = len(plan)
         done = False
         info = None
@@ -70,6 +102,14 @@ class Task:
         return rew, done, info
 
     def standard_condition(self, tile, args):
+        """
+            condition function for identifying a tile according to a list of possible tiles
+
+            :param tile: tile to verify
+            :param args: arguments for the given condition (list of correct tiles combinations)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         if (args.__contains__((self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1]))) or
             ((self.game.get_char(tile[0], tile[1]) == 36 or
               (self.game.get_char(tile[0], tile[1]) == 37 and not self.game.check_inedible(
@@ -84,6 +124,15 @@ class Task:
 
     # metodo ausiliario per la ricerca e il pathfinding verso un gruppo di obbiettivi generici
     def standard_plan(self, glyphs, not_reach_diag, safe_play):
+        """
+            function for finding a path to a tile given a set of possible objective
+
+            :param glyphs: set of possible objective tiles
+            :param not_reach_diag: flag identifying a tile which cant be reachen diagonally
+            :param safe_play: flag identifying the need for a safe play
+            :return path to and position of a found tile
+        """
+
         found, y, x = self.game.find(self.standard_condition, glyphs)
         if found:
             char = self.game.get_char(y, x)
@@ -120,6 +169,16 @@ class ReachTask(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def execution(self, path, arg1, agent, stats):
+        """
+            function task's execution
+
+            :param path: path to be followed
+            :param arg1: optional extra argument of task's execution (position of the target to be reached)
+            :param agent: actual agent position according to agent's knowledge
+            :param stats: actual in-game character's stats according to agent's knowledge
+            :return path to and position of a found tile
+        """
+
         rew, done, info = self.do_plan(path)
         if rew == -1:
             self.game.clear_memory(arg1[0], arg1[1])
@@ -132,6 +191,15 @@ class HiddenTask(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def condition_unsearched_obj(self, tile, args):
+        """
+            condition function for identifying a tile according to a list of possible tiles
+            looking for a tile where agent haven't performed enough searches yet
+
+            :param tile: tile to verify
+            :param args: arguments for the given condition (list of correct tiles combinations)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         glyph = args[0]
         char = glyph[0]
         color = glyph[1]
@@ -146,12 +214,30 @@ class HiddenTask(Task):
 
     # metodo ausiliario per la ricerca e il pathfinding verso un obbiettivo in cui non è mai stata effettuata una search
     def unsearched_plan(self, glyph, safe_play):
+        """
+            function for finding a path to a tile containing the given glyph according to the unsearched condition (previous  function)
+
+            :param glyph: objective tile appearence on screen
+            :param safe_play: flag identifying the need for a safe play
+            :return path to and position of a found tile
+        """
+
         found, y, x = self.game.find(self.condition_unsearched_obj, glyph)
         if found:
             return self.basic_pathfinder(safe_play, y, x)
         return None, (-1, -1)
 
     def execution(self, path, arg1, agent, stats):  # in search room corridor
+        """
+            function task's execution
+
+            :param path: path to be followed
+            :param arg1: optional extra argument of task's execution (position of the target to be reached)
+            :param agent: actual agent position according to agent's knowledge
+            :param stats: actual in-game character's stats according to agent's knowledge
+            :return path to and position of a found tile
+        """
+
         rew, done, info = self.do_plan(path)
         if rew == -1:
             self.game.clear_memory(arg1[0], arg1[1])

@@ -1,9 +1,7 @@
 import math
 import gym
-from gym.spaces import Dict
 import minihack
 from nle import nethack
-from typing import Dict
 from queue import PriorityQueue
 import time
 import sys
@@ -78,6 +76,20 @@ class GameWhisperer:
         # env.render()
 
     def calculate_risk(self, y, x):
+        """
+            function that calculates the risk value of a set of tiles
+            given the location of a hazard.
+
+            +1 +1 +1 +1 +1
+            +1 +2 +2 +2 +1
+            +1 +2 +2 +2 +1  hazard on the center
+            +1 +2 +2 +2 +1
+            +1 +1 +1 +1 +1
+
+            :param y: dangerous tile y/vertical value
+            :param x: dangerous tile x/horizontal value
+        """
+
         touched = []
         layer = self.neighbors_8_dir(y, x)
         self.risk_map[y][x] += 2
@@ -92,8 +104,11 @@ class GameWhisperer:
                     self.risk_map[s_tile[0]][s_tile[1]] += 1
                     touched.append((s_tile[0], s_tile[1]))
 
-    # metodo per l'aggiornamento dell'osservazione dei pericoli
     def update_riskmap(self):
+        """
+            function that calculates the risk value of every tile
+        """
+
         self.risk_map = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
 
         for y in range(self.size_y):
@@ -101,8 +116,11 @@ class GameWhisperer:
                 if self.is_a_monster(y, x):
                     self.calculate_risk(y, x)
 
-    # metodo per l'aggiornamento dell'osservazione
     def update_obs(self):
+        """
+            function that update every possible version of the observation space
+        """
+
         self.glyph_obs = self.current_obs.__getitem__("glyphs")
         self.char_obs = self.current_obs.__getitem__("chars")
         self.color_obs = self.current_obs.__getitem__("colors")
@@ -116,6 +134,13 @@ class GameWhisperer:
             self.last_risk_update = self.bl_stats[20]
 
     def crop_printer(self, obs):
+        """
+            debug function that print a cropped (on the agent)
+            version of a given observation space
+
+            :param obs: given observation space
+        """
+
         print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
               obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
               obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
@@ -143,12 +168,24 @@ class GameWhisperer:
               obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
 
     def debug_crop(self):
+        """
+            debug function that print a cropped (on the agent)
+            version of every observation space
+        """
+
         self.crop_printer(self.char_obs)
         self.crop_printer(self.color_obs)
         self.crop_printer(self.glyph_obs)
         print(self.exception)
 
     def glyph_cooldown(self, glyph):
+        """
+            function that calculates the cooldown for taking
+            into account a given glyph
+
+            :param glyph: given glyph
+        """
+
         if self.recently_ejected:
             self.recently_ejected = False
             return -1
@@ -170,6 +207,14 @@ class GameWhisperer:
         return cooldown
 
     def find(self, condition, args):
+        """
+            function for searching the closest tile which satisfies a given condition
+            starting from the agent position
+
+            :param condition: condition function to consider
+            :param args: arguments for the given condition
+        """
+
         frontier = list()
         looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
@@ -194,6 +239,13 @@ class GameWhisperer:
         return False, -1, -1
 
     def find_far(self, condition):
+        """
+            function for searching the farest tile which satisfies a given condition
+
+            :param condition: condition function to consider
+        """
+
+
         frontier = list()
         looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
@@ -222,6 +274,14 @@ class GameWhisperer:
             return False, -1, -1
 
     def condition_agent_obj(self, tile, args):
+        """
+            condition function for searching the agent on the map
+
+            :param tile: tile to verify
+            :param args: arguments for the given condition
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         if args.__contains__((self.char_obs[tile[0]][tile[1]], self.color_obs[tile[0]][tile[1]])) and \
                 (self.memory[tile[0]][tile[1]] == -1 or
                  abs(self.memory[tile[0]][tile[1]] - self.act_num) > self.glyph_cooldown(
@@ -231,18 +291,29 @@ class GameWhisperer:
         else:
             return False
 
-    # metodo che individua e aggiorna la posizione dell'agente
     def update_agent(self):
+        """
+            function for updating the known agent's position
+        """
+
         found_agent, self.a_yx[0], self.a_yx[1] = self.find(self.condition_agent_obj, [(64, 15)])
         return found_agent
 
     def hard_search(self):
+        """
+            function to set the "hard search", iteratively decreasing
+            the number of total searches allowed per tile, after resetting the searchmap
+        """
+
         self.search_map = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         self.search_max = self.hard_search_max
         self.hard_search_max -= 1
 
-    # metodo che effettua il reset della memoria dell'agente
     def reset_memory(self):
+        """
+            function that resets the agent's knowledge of the game world
+        """
+
         self.exception = []
         self.monster_exception = []
         self.search_max = self.default_search_max
@@ -251,6 +322,15 @@ class GameWhisperer:
         self.search_map = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
 
     def unexplored_walkable_around(self, y, x):
+        """
+            function that checks for the presence of
+            never visited and walkable tiles around the agent
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if exist a near walkable and unexplored tile, FALSE -> elsewise
+        """
+
         walkable = 0
         unex_walkable = 0
         door_flag = False
@@ -275,14 +355,28 @@ class GameWhisperer:
 
         return False
 
-    # metodo per stabilire se una casella vada o meno considerata inesplorata
     def is_unexplored(self, y, x):
+        """
+            function that checks if a given tile is unexplored
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is unexplored, FALSE -> elsewise
+        """
+
         if self.memory[y][x] == -1 or abs(self.memory[y][x] - self.act_num) >= self.cooldown:
             return True
         else:
             return False
 
     def is_walkable(self, y, x):
+        """
+            function that checks if a given tile is walkable
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is walkable, FALSE -> elsewise
+        """
 
         char = self.char_obs[y][x]
         color = self.color_obs[y][x]
@@ -312,6 +406,14 @@ class GameWhisperer:
             return False
 
     def is_a_monster(self, y, x):
+        """
+            function that checks if a given tile is a monster
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is a monster, FALSE -> elsewise
+        """
+
         char = self.char_obs[y][x]
         color = self.color_obs[y][x]
 
@@ -339,12 +441,28 @@ class GameWhisperer:
             return False
 
     def is_safe(self, y, x):
+        """
+            function that checks if a given tile is safe (with zero risk)
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is safe, FALSE -> elsewise
+        """
+
         if self.risk_map[y][x] > 0:
             return False
         else:
             return True
 
     def is_unsearched_wallside(self, y, x):
+        """
+            function that checks if a given tile is near a wall
+            and the agent never performed a search action there
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is unsearched and wallside, FALSE -> elsewise
+        """
 
         if y < self.size_y - 1:
             if (self.char_obs[y + 1][x] == 124 or self.char_obs[y + 1][x] == 45) and \
@@ -365,6 +483,14 @@ class GameWhisperer:
         return False
 
     def is_unsearched_voidside(self, y, x):
+        """
+            function that checks if a given tile is near a black unknown tile
+            and the agent never performed a search action there
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is unsearched and near an unknown tile, FALSE -> elsewise
+        """
 
         if y < self.size_y - 1:
             if self.char_obs[y + 1][x] == 32 and self.search_map[y + 1][x] == 0:
@@ -381,6 +507,15 @@ class GameWhisperer:
         return False
 
     def is_doorway(self, y, x):
+        """
+            function that checks if a given tile is a doorway looking for the glyph and also
+            counting the walls around the tile
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is a doorway, FALSE -> elsewise
+        """
+
         char = self.char_obs[y][x]
         color = self.color_obs[y][x]
         if (
@@ -411,6 +546,15 @@ class GameWhisperer:
             return False
 
     def is_isolated(self, y, x, glyph, cross):
+        """
+            function that checks if a given tile is isolated from
+            other tiles of the same kind (or also near a doorway)
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is isolated, FALSE -> elsewise
+        """
+
         same_glyph_count = 0
         near = self.neighbors_8_dir(y, x)
         while len(near) > 0:
@@ -433,6 +577,17 @@ class GameWhisperer:
             return False
 
     def is_near_glyph(self, y, x, glyph, dir_num):
+        """
+            function that checks if a given tile is near
+            a tile carrying a specific glyph
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :param glyph: specific glyph to be noticed
+            :param dir_num: 4 or 8 directions to check
+            :return: TRUE -> if given tile is near the given glyph, FALSE -> elsewise
+        """
+
         char = glyph[0]
         color = glyph[1]
         around_it = []
@@ -447,6 +602,14 @@ class GameWhisperer:
         return False
 
     def neighbors_8_dir(self, y, x):
+        """
+            function that return the 8-directions neighborhood of a given tile
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: a list containing the 8 tiles around the given one
+        """
+
         neighborhood = self.neighbors_4_dir(y, x)
 
         if y > 0:
@@ -464,6 +627,14 @@ class GameWhisperer:
         return neighborhood
 
     def neighbors_4_dir(self, y, x):
+        """
+            function that return the 4-directions (N,E,S,W) neighborhood of a given tile
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: a list containing the 4 tiles around the given one
+        """
+
         neighborhood = list()
         if y > 0:
             neighborhood.append((y - 1, x))  # n
@@ -476,6 +647,17 @@ class GameWhisperer:
         return neighborhood
 
     def neighbors(self, y, x, safe):
+        """
+            function that returns the list of correctly reachable tiles
+            (considering walkable tiles without entering the doors diagonally)
+            starting from a given tile, avoiding dangerous tiles in case the "safe" flag is active
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :param safe: flag that determines the consideration of dangerous tiles
+            :return: a list containing the tiles around the given one
+        """
+
         neighborhood = list()
         doorway = self.is_doorway(y, x)
         if y > 0:
@@ -509,12 +691,24 @@ class GameWhisperer:
         return neighborhood
 
     def parse_message(self):
+        """
+            function that parse the in game message form the NLE observation
+
+            :return: a string containing the parsed message
+        """
+
         parsed_string = ""
         for c in self.message:
             parsed_string = parsed_string + chr(c)
         return parsed_string
 
     def parse_all(self):
+        """
+            function that parse the complete observation returning a readable form of it
+
+            :return: a string containing the parsed observation state
+        """
+
         parsed_string = ""
         for i in range(0, 24):
             for j in range(0, 80):
@@ -523,11 +717,29 @@ class GameWhisperer:
         return parsed_string
 
     def yes(self):
+        """
+            function that perform the action "yes" of NetHack
+
+            :return: //
+        """
+
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(7)
         self.update_obs()
 
     def do_it(self, x, direction):
+        """
+            function for sending input to the game terminal.
+            It offers the management of specific cases, automating some actions.
+            ex: Engraving Elbereth
+
+            :param x: numeric value of the action to be performed according to the NLE implementation
+            :param direction: optional value useful when some actions require a direction to be performed
+            :return: the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
+        """
+
         # print(self.bl_stats)
         self.old_turn = self.bl_stats[20]
         rew = 0
@@ -647,6 +859,13 @@ class GameWhisperer:
         return rew, done, info
 
     def shop_propagation(self, tile):
+        """
+            function that propagates the "shop" status to the appropriate tiles starting from the given tile
+
+            :param tile: the starting tile
+            :return: //
+        """
+
         for near in self.neighbors_8_dir(tile[0], tile[1]):
             char = self.char_obs[near[0]][near[1]]
             if char == 124 or char == 45 or char == 35 or char == 32 or (
@@ -659,6 +878,17 @@ class GameWhisperer:
 
     @staticmethod
     def move_translator(from_y, from_x, to_y, to_x):
+        """
+            function that calculates the move according to the NLE implementation
+            needed to move between two given tiles
+
+            :param from_x: x value of the starting tile
+            :param from_y: y value of the starting tile
+            :param to_x: x value of the destination tile
+            :param to_y: y value of the destination tile
+            :return: the numerical value of the action to be performed
+        """
+
         if to_y > from_y:  # la y del next è maggiore -> movimenti verso sud
             if to_x > from_x:
                 move = 5  # se
@@ -684,6 +914,16 @@ class GameWhisperer:
 
     @staticmethod
     def inverse_move_translator(from_y, from_x, direction):
+        """
+            function that calculates the destination tile given
+            a starting tile and a direction (according to the NLE implementation)
+
+            :param from_x: x value of the starting tile
+            :param from_y: y value of the starting tile
+            :param direction: the move according to the NLE implementation
+            :return: y and x value of the destination tile
+        """
+
         if direction == 0:
             return from_y - 1, from_x
         elif direction == 4:
@@ -702,6 +942,13 @@ class GameWhisperer:
             return from_y - 1, from_x - 1
 
     def reset_game(self):
+        """
+            function that sets variable values to their initial version,
+            preparing the agent for a new game
+
+            :return: //
+        """
+
         self.current_obs = env.reset()
         self.new_turn = 0
         self.old_turn = 0
@@ -725,6 +972,13 @@ class GameWhisperer:
         self.last_pray = -1
 
     def partial_reset_game(self):
+        """
+            function that sets some variable values to their initial version,
+            resetting the agent's knowledge of the world
+
+            :return: //
+        """
+
         self.pet_alive = False
         self.update_obs()
         self.reset_memory()
@@ -896,11 +1150,31 @@ class DungeonWalker:
     # euristica per il calcolo della distanza tra due caselle della griglia 8-direzionale
     @staticmethod
     def h_octile_distance(ay, ax, oy, ox):
+        """
+            function that calculates "octile distance" heuristic for a given tile,
+            given an objective tile
+
+            :param ay: starting tile y/vertical coordinate
+            :param ax: starting tile x/horiziontal coordinate
+            :param oy: objective tile y/vertical coordinate
+            :param ox: objective tile x/horiziontal coordinate
+            :return: Octile Distance value for the given tile
+        """
+
         x_d = abs(ax - ox)
         y_d = abs(ay - oy)
         return (1.414 * min(x_d, y_d)) + abs(x_d - y_d)
 
     def a_star(self, oy, ox, safe):
+        """
+            function implementing A* algorythm
+
+            :param oy: objective tile y/vertical coordinate
+            :param ox: objective tile x/horiziontal coordinate
+            :return: came_from -> dictionary containing the associations between the tiles of the identified path
+                     cost_so_far -> dictionary containing the costs for moving in each tile of the identified path
+        """
+
         # voglio che restituisca il cammino
         # lista di priorità rappresentante la frontiera
         frontier = PriorityQueue()
@@ -908,9 +1182,9 @@ class DungeonWalker:
         # inizializzo l'algoritmo inserendo nella lista il nodo iniziale (posizione agente) (priorità massima ->0)
         frontier.put(((agent[0], agent[1]), 0))
         # dizionario in cui associo ai nodi il predecessore
-        came_from: Dict[Location, Optional[Location]] = {}
+        came_from = {}
         # dizionario in cui associo ai nodi il costo f(n) accumalatovi
-        cost_so_far: Dict[Location, float] = {}
+        cost_so_far = {}
         came_from[(agent[0], agent[1])] = None
         cost_so_far[(agent[0], agent[1])] = 0
 
@@ -930,6 +1204,16 @@ class DungeonWalker:
         return came_from, cost_so_far
 
     def path_finder(self, oy, ox, not_reach_diag, safe_play):
+        """
+            function that calculates "octile distance" heuristic for a given tile,
+            given an objective tile
+
+            :param not_reach_diag: flag identifying a tile which cant be reachen diagonally
+            :param safe_play: flag identifying the need for a safe play
+            :param oy: objective tile y/vertical coordinate
+            :param ox: objective tile x/horiziontal coordinate
+            :return: the best path found according to game's rules, "A*" and "Octile Distance" heursitic
+        """
 
         yellow_brick_road = list()
 
@@ -987,6 +1271,18 @@ class DungeonWalker:
 
 # metodo che pianifica la task da eseguire in un dato stato
 def planning(game, tasks_prio, task_map):
+    """
+        function that plan the best task to perform, according to the in-game state of the agent
+        and the tasks priority establied by the user in agent's configuration
+
+        :param game: reference to the core "GameWhisperer" object
+        :param tasks_prio: starting tile x/horiziontal coordinate
+        :param task_map: objective tile y/vertical coordinate
+        :return: task_name -> a string containing the identification name of the planned task
+                 path -> an optional path useful in planned task's execution
+                 arg1 -> an optional extra argument useful for some task's execution
+    """
+
     if game.get_new_turn() == game.get_old_turn():
         game.stuck()
     else:
@@ -1018,6 +1314,18 @@ def planning(game, tasks_prio, task_map):
 
 # metodo che esegue le task pianificata
 def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
+    """
+        function that plan the best task to perform, according to the in-game state of the agent
+        and the tasks priority establied by the user in agent's configuration
+
+        :param dungeon_walker: reference to the core "DungeonWalker" object
+        :param game: reference to the core "GameWhisperer" object
+        :param tasks_prio: starting tile x/horiziontal coordinate
+        :param task_map: objective tile y/vertical coordinate
+        :param attempts: number of games to perform according to agent's configuration
+        :return: //
+    """
+
     success = 0
     scores = []
     mediana = 0
@@ -1086,5 +1394,5 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
             success += 1
 
 
-def go_back(num_lines):  # funzione per sovrascrivere lo schermo attuale
+def go_back(num_lines):
     print("\033[%dA" % num_lines)
