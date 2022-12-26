@@ -170,7 +170,7 @@ class ReachTask(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-            function task's execution
+            function for task's execution
 
             :param path: path to be followed
             :param arg1: optional extra argument of task's execution (position of the target to be reached)
@@ -229,7 +229,7 @@ class HiddenTask(Task):
 
     def execution(self, path, arg1, agent, stats):  # in search room corridor
         """
-            function task's execution
+            function for task's execution
 
             :param path: path to be followed
             :param arg1: optional extra argument of task's execution (position of the target to be reached)

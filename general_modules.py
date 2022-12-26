@@ -6,6 +6,17 @@ class StairsDescent(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+             function for task planning
+
+             :param safe_play: flag identifying the need for a safe play
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return name -> a string containing task name
+                     path -> a list containing the actions to be performed to reach a certain possible target
+                     arg1 -> extra optional output (target's coordinates in this case)
+         """
+
         if not self.custom_contain(self.game.get_stairs_locations()[0], stats[12])[0]:
             found, y, x = self.game.find(self.standard_condition, [60])
             if found:
@@ -33,6 +44,16 @@ class StairsDescent(Task):
             return self.name, path, coords
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.do_plan(path)
         if rew == -1:
             self.game.clear_memory(arg1[0], arg1[1])
@@ -53,6 +74,17 @@ class StairsAscent(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+             function for task planning
+
+             :param safe_play: flag identifying the need for a safe play
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return name -> a string containing task name
+                     path -> a list containing the actions to be performed to reach a certain possible target
+                     arg1 -> extra optional output (target's coordinates in this case)
+         """
+
         if stats[12] == 1 or 2 <= stats[21] <= 4 or stats[18] >= stats[
                 12] + 2:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
             return None, None, None
@@ -68,6 +100,16 @@ class StairsAscent(Task):
             return self.name, path, coords
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.do_plan(path)
         if rew == -1:
             self.game.clear_memory(arg1[0], arg1[1])
@@ -88,6 +130,17 @@ class Pray(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+             function for task planning
+
+             :param safe_play: flag identifying the need for a safe play
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return name -> a string containing task name
+                     path -> a list containing the actions to be performed to reach a certain possible target (None)
+                     arg1 -> extra optional output (None)
+         """
+
         if (3 <= stats[21] <= 4 or stats[10] <= 6 or (
                 stats[11] != 0 and (stats[10] / stats[11]) < 0.14)) and (
                 abs(self.game.get_last_pray() - stats[20]) >= 800 or self.game.get_last_pray() == -1) and stats[
@@ -95,6 +148,16 @@ class Pray(Task):
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         if self.game.update_agent():
             rew, done, info = self.game.do_it(62, None)  # pray
             self.game.update_last_pray()
@@ -110,6 +173,17 @@ class Elbereth(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+             function for task planning
+
+             :param safe_play: flag identifying the need for a safe play
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return name -> a string containing task name
+                     path -> a list containing the actions to be performed to reach a certain possible target (None)
+                     arg1 -> extra optional output (None)
+         """
+
         for tile in self.game.neighbors_8_dir(agent[0], agent[1]):
             char = self.game.get_char(tile[0], tile[1])
             color = self.game.get_color(tile[0], tile[1])
@@ -123,6 +197,16 @@ class Elbereth(Task):
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.game.do_it(36, None)  # engrave
         self.game.append_engraved((agent[0], agent[1]))
 
@@ -144,6 +228,17 @@ class Run(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+             function for task planning
+
+             :param safe_play: flag identifying the need for a safe play
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return name -> a string containing task name
+                     path -> a list containing the actions to be performed to reach a certain possible target (None)
+                     arg1 -> extra optional output (the best tile to run to in this case)
+         """
+
         for tile in self.game.neighbors_8_dir(agent[0], agent[1]):
             char = self.game.get_char(tile[0], tile[1])
             color = self.game.get_color(tile[0], tile[1])
@@ -187,6 +282,16 @@ class Run(Task):
                 return None, None, None
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.game.do_it(
             self.game.move_translator(agent[0], agent[1], arg1[0], arg1[1]),
             None)
@@ -213,6 +318,15 @@ class ExploreClosest(Task):
 
     # metodo ausiliario per la ricerca e il pathfinding verso la casella adiacente ad un gruppo di obbiettivi
     def mixed_plan(self, glyphs, condition, safe_play):
+        """
+            function for finding a path to a tile given a set of possible objective
+
+            :param glyphs: set of possible objective tiles
+            :param condition: condition function to be applied
+            :param safe_play: flag identifying the need for a safe play
+            :return path to and position of a found tile
+        """
+
         path = None
         found, y, x = self.game.find(condition, glyphs)
         if found:
@@ -237,6 +351,13 @@ class ExploreClosest(Task):
         return path, (y, x)
 
     def condition_multiple_obj_v0(self, tile, args):
+        """
+            condition function for identifying a tile according to a list of possible tiles
+
+            :param tile: tile to test
+            :param args: arguments for the given condition (list of correct tiles combinations)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
 
         if args.__contains__((self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1]))) and \
                 (self.game.get_memory(tile[0], tile[1]) == -1 or
@@ -250,6 +371,14 @@ class ExploreClosest(Task):
             return False
 
     def sort_key_func(self, tile):
+        """
+            function that calculates a sorting parameter for the elements of a list
+            according to how many neighboring tiles carry the same glyph
+
+            :param  tile: the given tile
+            :return the opposite in sign of the count made
+        """
+
         tile_nbh = self.game.neighbors_8_dir(tile[0], tile[1])
         glyph = self.game.get_glyph(tile[0], tile[1])
         count = 0
@@ -260,6 +389,19 @@ class ExploreClosest(Task):
 
     # metodo che se possibile sposta l'agente nella casella adiacente con/senza(equal) il glifo corrispondente
     def roam_to_next_glyph(self, glyph, equal):
+        """
+            function that move the agent to a neithboring tile
+            containing (or not containing, depending on "equal" value)
+            a given glyph
+
+            :param  glyph: the given glyph
+            :param  equal: flag that switches between two opposite behaviours of the function
+            :return: 0 -> if there aren't neighboring tiles according to the need, 1 -> elsewise
+                     the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
+        """
+
         char = glyph[0]
         color = glyph[1]
         rew = 0
@@ -305,6 +447,15 @@ class ExploreClosest(Task):
 
     # metodo per seguire un percorso di glifi '#'(corridoio) ignoti fino ad esaurirli
     def corridor_roamer(self):
+        """
+            function that move the agent across a corridor on the map, stopping at
+            the end of a corridor's branch
+
+            :return: TRUE -> if the roaming endend well, 1 -> elsewise
+                     the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+        """
+
         last_roam = 1
         done = False
         rew = 0
@@ -348,6 +499,17 @@ class ExploreClosest(Task):
         return True, rew, done
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         path, coords = self.mixed_plan([(35, 15), (35, 7), (46, 7), (45, 3), (124, 3), (43, 3)],
                                        self.condition_multiple_obj_v0, safe_play)
         if path is None or len(path) == 0:
@@ -366,6 +528,16 @@ class ExploreClosest(Task):
                 return "reach_doorway_open", path, coords
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         if self.chosen_task == "reach_doorway_open":
             rew, done, info = self.do_plan(path)
             if rew == -1:
@@ -428,6 +600,15 @@ class Fight(Task):
 
     @staticmethod
     def condition_close_obj(tile, args):
+        """
+            condition function for identifying a tile which verifies a certain condition in a given area
+
+            :param tile: tile to test
+            :param args: arguments for the given condition
+                         (an auxiliar condition function, a range and a center origin point)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         condition = args[0]
         look_range = args[1]
         center = args[2]
@@ -438,6 +619,16 @@ class Fight(Task):
 
     # metodo ausiliario per la ricerca e il pathfinding verso un gruppo di obbiettivi in un range limitato
     def close_plan(self, not_reach_diag, condition, look_range, safe_play):
+        """
+            function for finding a path to a tile given a set of possible objective
+
+            :param not_reach_diag: flag identifying a tile which cant be reachen diagonally
+            :param condition: condition function to be applied
+            :param look_range: a certain range for target's research
+            :param safe_play: flag identifying the need for a safe play
+            :return path to and position of a found tile
+        """
+
         path = None
         # y = -1
         # x = -1
@@ -476,6 +667,17 @@ class Fight(Task):
         return path, (y, x)
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         path, coords = self.close_plan(False, self.game.is_a_monster, 5, False)
         if path is None:
             return None, None, None
@@ -483,6 +685,16 @@ class Fight(Task):
             return self.name, path, coords
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         length = len(path)
         y_dist = abs(arg1[0] - agent[0])
         x_dist = abs(arg1[1] - agent[1])
@@ -555,6 +767,12 @@ class Eat(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def fresh_food(self):
+        """
+            function for safe to eat food identification (only for corpses of monsters killed by the agent)
+            according to agent memory and turns passed
+
+            :return TRUE -> if the screen displays a safe food, FALSE -> elsewise
+        """
         message = self.game.get_parsed_message()
         stats = self.game.get_bl_stats()
         for log in self.game.get_recently_killed():
@@ -569,6 +787,17 @@ class Eat(Task):
         return False
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         if stats[21] < 1:
             return None, None, None
         path, coords = self.standard_plan([(37, -1)], False, safe_play)
@@ -578,6 +807,16 @@ class Eat(Task):
             return self.name, path, coords
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.do_plan(path)
         if rew == -1:
             self.game.clear_memory(arg1[0], arg1[1])
@@ -639,6 +878,17 @@ class Break(Task):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target (None)
+                       arg1 -> extra optional output (None)
+        """
+
         near = self.game.neighbors_8_dir(agent[0], agent[1])
         for tile in near:
             if self.game.is_a_monster(tile[0], tile[1]):
@@ -648,6 +898,16 @@ class Break(Task):
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):
+        """
+             function for task execution
+
+             :param path: path to be followed
+             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param agent: actual agent position according to agent's knowledge
+             :param stats: actual in-game character's stats according to agent's knowledge
+             :return path to and position of a found tile
+         """
+
         rew, done, info = self.game.do_it(38, None)  # esc, per evitare strane situe
         if not done:
             rew, done, info = self.game.do_it(75, None)  # search per aspettare con value
