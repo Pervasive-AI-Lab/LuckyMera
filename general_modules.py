@@ -773,7 +773,8 @@ class Eat(Task):
 
             :return TRUE -> if the screen displays a safe food, FALSE -> elsewise
         """
-        message = self.game.get_parsed_message()
+        # message = self.game.get_parsed_message()
+        message = self.game.parse_all()
         stats = self.game.get_bl_stats()
         for log in self.game.get_recently_killed():
             monster = log[0]

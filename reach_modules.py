@@ -6,6 +6,17 @@ class Gold(ReachTask):
         super().__init__(dungeon_walker, game, task_name)
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         path, coords = self.standard_plan([(36, -1)], False, safe_play)
         if path is None or len(path) == 0:
             return None, None, None
@@ -18,6 +29,15 @@ class Horizon(ReachTask):
         super().__init__(dungeon_walker, game, task_name)
 
     def condition_horizon_obj(self, tile, args):
+        """
+            condition function for identifying a tile which verifies a certain condition in a given area
+
+            :param tile: tile to test
+            :param args: arguments for the given condition
+                         (a given glyph for confrontation)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         glyph = args[0]
         char = glyph[0]
         # color = glyph[1]
@@ -35,6 +55,17 @@ class Horizon(ReachTask):
         return None, (-1, -1)
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         path, coords = self.horizon_plan([(46, 7)], safe_play)
         if path is None:
             return None, None, None
@@ -47,6 +78,15 @@ class Unseen(ReachTask):
         super().__init__(dungeon_walker, game, task_name)
 
     def condition_unexplored_obj(self, tile, args):
+        """
+            condition function for identifying a tile which verifies a certain condition in a given area
+
+            :param tile: tile to test
+            :param args: arguments for the given condition
+                         (a given glyph for confrontation, a flag for testing isolated (or not) tiles)
+            :return TRUE -> if condition is verified, FALSE -> elsewise
+        """
+
         char = -1
         color = -1
         glyph = args[0]
@@ -65,6 +105,17 @@ class Unseen(ReachTask):
 
     # metodo ausiliario per la ricerca e il pathfinding verso un obbiettivo inesplorato/isolato
     def unexplored_plan(self, glyph, not_reach_diag, isolated, safe_play):
+        """
+            function for finding a path to a tile carrying a target glyph
+
+            :param glyph: a given glyph to be searched
+            :param not_reach_diag: flag identifying a tile which cant be reachen diagonally
+            :param isolated: a flag for searching isolated tiles (with no neighboring tiles carrying the same glyph)
+                             or not
+            :param safe_play: flag identifying the need for a safe play
+            :return path to and position of a found tile
+        """
+
         found, y, x = self.game.find(self.condition_unexplored_obj, [glyph, isolated])
         if found:
             path = self.dungeon_walker.path_finder(y, x, not_reach_diag, safe_play)
@@ -73,6 +124,17 @@ class Unseen(ReachTask):
         return None, (-1, -1)
 
     def planning(self, stats, safe_play, agent):
+        """
+               function for task planning
+
+               :param safe_play: flag identifying the need for a safe play
+               :param agent: actual agent position according to agent's knowledge
+               :param stats: actual in-game character's stats according to agent's knowledge
+               :return name -> a string containing task name
+                       path -> a list containing the actions to be performed to reach a certain possible target
+                       arg1 -> extra optional output (target's coordinates in this case)
+        """
+
         path, coords = self.unexplored_plan(None, False, False, safe_play)
         if path is None or len(path) == 0:
             return None, None, None
