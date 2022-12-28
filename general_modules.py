@@ -144,7 +144,7 @@ class Pray(Task):
         if (3 <= stats[21] <= 4 or stats[10] <= 6 or (
                 stats[11] != 0 and (stats[10] / stats[11]) < 0.14)) and (
                 abs(self.game.get_last_pray() - stats[20]) >= 800 or self.game.get_last_pray() == -1) and stats[
-                20] > 300:
+                20] > 100:
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):

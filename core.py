@@ -854,7 +854,7 @@ class GameWhisperer:
         if not self.fast_mode:  # and x != 10:
             # go_back(27)
             env.render()
-            time.sleep(0)
+            # time.sleep(0)
         self.new_turn = self.bl_stats[20]
         return rew, done, info
 
