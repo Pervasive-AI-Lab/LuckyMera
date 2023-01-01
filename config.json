@@ -16,6 +16,6 @@
 "search_hidden_corridor"
 ],
 
-"fast_mode": "on",
-"attempts": "100"
+"fast_mode": "off",
+"attempts": "1"
 }

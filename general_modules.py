@@ -251,8 +251,8 @@ class Run(Task):
                     (char == 66):
                 continue
         risk = self.game.get_risk(agent[0], agent[1])
-        if risk < 1 or risk > 3 or (
-                stats[11] != 0 and (stats[10] / stats[11]) > 0.50) or self.game.get_ran():
+        # risk < 1 or risk > 3 or \
+        if risk < 1 or (stats[11] != 0 and (stats[10] / stats[11]) > 0.50) or self.game.get_ran():
             return None, None, None
         else:
             if self.game.is_doorway(agent[0], agent[1]):
@@ -424,14 +424,17 @@ class ExploreClosest(Task):
             char_n = self.game.get_char(next_tile[0], next_tile[1])
             color_n = self.game.get_char(next_tile[0], next_tile[1])
             if self.game.is_unexplored(next_tile[0], next_tile[1]) and (glyph is None or
-                                                                        (not equal and (char_n, color_n) != (char, color)) or
-                                                                        (equal and (char_n, color_n) == (char, color)) or
+                                                                        (not equal and (char_n, color_n) != (
+                                                                                char, color)) or
+                                                                        (equal and (char_n, color_n) == (
+                                                                                char, color)) or
                                                                         char_n == 96 or
                                                                         char_n == 37 or
                                                                         char_n == 36) \
                     and self.game.is_walkable(next_tile[0], next_tile[1]):
                 agent = self.game.get_agent_position()
-                rew, done, info = self.game.do_it(self.game.move_translator(agent[0], agent[1], next_tile[0], next_tile[1]), None)
+                rew, done, info = self.game.do_it(
+                    self.game.move_translator(agent[0], agent[1], next_tile[0], next_tile[1]), None)
                 if self.game.update_agent():
                     message = self.game.get_parsed_message()
                     if message.__contains__("It's solid stone.") or \
@@ -645,7 +648,7 @@ class Fight(Task):
             if lms[0] == char and lms[1] == \
                     color:
                 self.game.update_last_monster_searched(char, color, lms[2] + 1)
-                if lms[2] > 7:  # probabile statua
+                if lms[2] > 12:  # probabile statua
                     self.game.monster_exception.append((y, x))
             else:
                 self.game.update_last_monster_searched(char, color, 1)
@@ -779,7 +782,7 @@ class Eat(Task):
         for log in self.game.get_recently_killed():
             monster = log[0]
             turn = log[1]
-            if abs(turn - self.game.get_act_num()) < 50 and message.__contains__(monster):
+            if abs(turn - self.game.get_act_num()) <= 30 and message.__contains__(monster):  # 50 -> 30
                 if message.__contains__("yellow mold"):
                     return False
                 if message.__contains__("acid blob") and stats[10] < 20:
@@ -832,7 +835,7 @@ class Eat(Task):
                 parsed_all.__contains__("homunculus"):
             self.game.append_inedible((arg1[0], arg1[1]))
             return None, None, None
-        elif parsed_all.__contains__("You see here a lichen corpse.") or \
+        elif parsed_all.__contains__("lichen") or \
                 parsed_all.__contains__("ration") or \
                 parsed_all.__contains__("melon") or \
                 parsed_all.__contains__("apple") or \
@@ -854,7 +857,7 @@ class Eat(Task):
                 parsed_all.__contains__("wolfsbane") or \
                 parsed_all.__contains__("tin") or \
                 parsed_all.__contains__("kelp frond") or \
-                parsed_all.__contains__("You see here a lizard corpse.") or self.fresh_food():
+                parsed_all.__contains__("lizard") or self.fresh_food():
             self.game.do_it(35, None)  # eat
             gnam = True
             message = self.game.get_parsed_message()
@@ -894,8 +897,8 @@ class Break(Task):
         for tile in near:
             if self.game.is_a_monster(tile[0], tile[1]):
                 return None, None, None
-        if stats[21] <= 2 and self.game.get_risk(agent[0], agent[1]) == 0 and stats[11] != 0 and (
-                stats[10] / stats[11]) < 0.65:
+        if stats[21] <= 2 and self.game.get_risk(agent[0], agent[1]) == 0 and stats[11] != 0 \
+                and (stats[10] / stats[11]) < 0.65:
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):

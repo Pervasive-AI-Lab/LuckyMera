@@ -47,6 +47,9 @@ class Task:
             :return: TRUE -> if the sus tile is safe, FALSE -> elsewise
         """
 
+        if self.game.get_bl_stats()[12] != 1:
+            return True
+
         for log in self.game.get_recently_killed():
             if log[2] == y and log[3] == x:
                 return True

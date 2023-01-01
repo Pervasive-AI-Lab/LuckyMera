@@ -1,4 +1,4 @@
-# Judy_Bot_T3 -- virtually 8th place NetHack agent comparing to [NetHack Challenge at NeurIPS 2021](https://www.aicrowd.com/challenges/neurips-2021-the-nethack-challenge) results
+# Judy_Bot_T3 -- virtually 7th place NetHack agent comparing to [NetHack Challenge at NeurIPS 2021](https://www.aicrowd.com/challenges/neurips-2021-the-nethack-challenge) results
 
 Version: 1.1.7
 
@@ -6,7 +6,7 @@ Version: 1.1.7
 Agent Judy_Bot_T3 was developed as a thesis project following the bachelor's degree obtained on 02/12/2022.
 
 
-Starting from version 1.1.7, the agent is able to obtain an average score of 744 and a median score of 645. Scores acquired by playing the "NetHackChallenge-v0" task through the
+Starting from version 1.1.7, the agent is able to obtain an average score of 778 and a median score of 689. Scores acquired by playing the "NetHackChallenge-v0" task through the
 [NetHack Learning Environment](https://github.com/facebookresearch/nle) framework.
 
 The code is completely open-source and has been designed with the aim of complying with the principles of configurability, 

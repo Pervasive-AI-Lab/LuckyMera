@@ -429,7 +429,7 @@ class GameWhisperer:
                 return False
             elif char == 117 and color == 3 and self.pet_alive:  # il pony amico non è un mostro
                 return False
-            elif char == 101 and not self.panic:  # spore or eye
+            elif char == 101 and not self.panic and self.stuck_counter < 100:  # spore or eye
                 return False
             elif char == 70 and color != 10 and color != 5 and not self.panic and self.bl_stats[10] < 15:  # Molds
                 return False
@@ -1141,6 +1141,9 @@ class GameWhisperer:
     def get_fast_mode(self):
         return self.fast_mode
 
+    def do_panic(self):
+        self.panic = True
+
 
 class DungeonWalker:
 
@@ -1382,6 +1385,8 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
                     break
                 elif hs_n > 20:
                     dungeon_walker.panic = True
+                    game.do_panic()
+
                 if hs_n % 2 == 0 and hs_n != 0:
                     game.reset_memory()
                 game.hard_search()
