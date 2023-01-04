@@ -69,6 +69,7 @@ class GameWhisperer:
         self.guard_encounter = 0
         self.u_stairs_locations = []
         self.d_stairs_locations = []
+        self.tactical_descent = 0
         self.fast_mode = fast_mode
         self.stuck_counter = 0
         self.hard_search_num = 0
@@ -727,6 +728,28 @@ class GameWhisperer:
             self.current_obs, rew, done, info = env.step(7)
         self.update_obs()
 
+    def no(self):
+        """
+            function that perform the action "no" of NetHack
+
+            :return: //
+        """
+
+        if self.update_agent():
+            self.current_obs, rew, done, info = env.step(5)
+        self.update_obs()
+
+    def more(self):
+        """
+            function that perform the action "no" of NetHack
+
+            :return: //
+        """
+
+        if self.update_agent():
+            self.current_obs, rew, done, info = env.step(19)
+        self.update_obs()
+
     def do_it(self, x, direction):
         """
             function for sending input to the game terminal.
@@ -749,12 +772,11 @@ class GameWhisperer:
         if not self.fast_mode:
             print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
         if self.bl_stats[20] % 100 == 0:
-            print("guard_encounter: ", self.guard_encounter, " avanzamento - score: ", self.bl_stats[9], " turno: ",
-                  self.bl_stats[20], " ora: ", time.localtime()[3], "-", time.localtime()[4], "pray_timeout: ",
-                  abs(self.last_pray - self.bl_stats[20]), " -----")
+            print("actual score: ", self.bl_stats[9], " turn: ",
+                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
             go_back(2)
 
-        if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 3000:
+        if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
             self.pet_alive = False
 
         if self.act_num % 50 == 0:  # modifica
@@ -808,9 +830,12 @@ class GameWhisperer:
         if self.parsed_message.__contains__("What do you want to write with?"):
             self.current_obs, rew, done, info = env.step(106)  # -
             self.update_obs()
+        if self.parsed_message.__contains__("Do you want to add to the current engraving?"):
+            self.no()
+        if self.parsed_message.__contains__("You wipe out the message that was written in the dust here."):
+            self.no()
         if self.parsed_message.__contains__("You write in the dust with your fingertip."):
-            self.current_obs, rew, done, info = env.step(19)  # more
-            self.update_obs()
+            self.more()
         if self.parsed_message.__contains__("What do you want to write in the dust here?"):
             self.current_obs, rew, done, info = env.step(36)  # E
             self.current_obs, rew, done, info = env.step(1)  # l
@@ -820,7 +845,7 @@ class GameWhisperer:
             self.current_obs, rew, done, info = env.step(35)  # e
             self.current_obs, rew, done, info = env.step(91)  # t
             self.current_obs, rew, done, info = env.step(3)  # h
-            self.current_obs, rew, done, info = env.step(19)  # more
+            self.more()
             self.update_obs()
 
         if self.parsed_message.__contains__("You swap places"):
@@ -854,7 +879,7 @@ class GameWhisperer:
         if not self.fast_mode:  # and x != 10:
             # go_back(27)
             env.render()
-            # time.sleep(0)
+            # time.sleep(0.05)
         self.new_turn = self.bl_stats[20]
         return rew, done, info
 
@@ -966,6 +991,7 @@ class GameWhisperer:
         self.shop_tiles = []
         self.u_stairs_locations = []
         self.d_stairs_locations = []
+        self.tactical_descent = 0
         self.total_score += self.score
         self.score = 0
         self.recently_killed = []
@@ -1018,7 +1044,10 @@ class GameWhisperer:
         return self.recently_killed
 
     def append_recently_killed(self, data):
-        self.exception.append(data)
+        self.recently_killed.append(data)
+
+    def remove_recently_killed(self, data):
+        self.recently_killed.remove(data)
 
     def check_recently_ejected(self):
         return self.recently_ejected
@@ -1040,6 +1069,12 @@ class GameWhisperer:
 
     def get_agent_position(self):
         return self.a_yx
+
+    def get_tactical_descent(self):
+        return self.tactical_descent
+
+    def set_tactical_descent(self, turn):
+        self.tactical_descent = turn
 
     def get_size_x(self):
         return self.size_x
@@ -1364,7 +1399,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
                 face = "(ง'-')ง"
             if mediana >= 756:
                 face = "ᕙ(`▿´)ᕗ"
-            print("// mean score: ", game.get_total_score() / true_divisor, "// median: ", mediana, " // games: ",
+            print("// Mean : ", game.get_total_score() / true_divisor, "// Median: ", mediana, " // Games: ",
                   len(scores), "      ", face, "               ")
             print(scores)
 

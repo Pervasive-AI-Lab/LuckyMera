@@ -11,6 +11,7 @@ def start_bot():
         config = json.load(f)
 
     print("\nJudy is looking for the Amulet of Yendor on the map ...\n")
+    print("\nVersion: 1.1.8.5\n")
 
     exec_mode = config['fast_mode']
     mode = False
