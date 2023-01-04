@@ -1,6 +1,6 @@
 # Judy_Bot_T3 -- virtually 8th place NetHack agent comparing to [NetHack Challenge at NeurIPS 2021](https://www.aicrowd.com/challenges/neurips-2021-the-nethack-challenge) results
 
-Version: 1.1.7
+Version: 1.1.8.5
 
 ## Description
 Agent Judy_Bot_T3 was developed as a thesis project following the bachelor's degree obtained on 02/12/2022.
