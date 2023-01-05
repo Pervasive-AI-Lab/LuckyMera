@@ -184,12 +184,13 @@ class Elbereth(Task):
                      arg1 -> extra optional output (None)
          """
 
+        if abs(self.game.get_elbereth_violation() - stats[20]) < 10 or 3 <= stats[21] <= 4:
+            return None, None, None  # 1.1.8.6
         for tile in self.game.neighbors_8_dir(agent[0], agent[1]):
             char = self.game.get_char(tile[0], tile[1])
             color = self.game.get_color(tile[0], tile[1])
-            if (char == 66 and color == 1) or \
-                    (char == 104 and (color == 1 or color == 3)) or \
-                    (char == 64 and (color == 1 or color == 3)):
+            # (char == 66 and color == 1)
+            if char == 65 or (char == 104 and (color == 1 or color == 3)) or char == 64:
                 return None, None, None  # 1.1.8.2
 
         # not self.game.check_engraved(agent) and
@@ -231,6 +232,7 @@ class Elbereth(Task):
                     message.__contains__("throw") or \
                     message.__contains__("swing") or \
                     message.__contains__("thrusts"):
+                self.game.set_elbereth_violation()
                 break
         return rew, done, info
 
@@ -719,7 +721,10 @@ class Fight(Task):
         info = None
         if y_dist >= 3 and x_dist >= 5 and length > 0 and not done:
             if self.game.update_agent():
-                rew, done, info = self.game.do_it(path.pop(), None)
+                direction = path.pop()
+                next_tile = self.game.inverse_move_translator(agent[0], agent[1], direction)
+                if not self.game.is_passive_monster(next_tile[0], next_tile[1]):
+                    rew, done, info = self.game.do_it(direction, None)
             else:
                 return 0, True, None
         elif y_dist == 2 or x_dist == 2 and not done:
@@ -731,56 +736,90 @@ class Fight(Task):
             message = self.game.get_parsed_message()
             act = self.game.get_act_num()
             if message.__contains__("kill") and not message.__contains__("zombie"):  # mostri rimossi: dwarf
-                if message.__contains__("fox"):
-                    self.game.append_recently_killed(("fox", act, arg1[0], arg1[1]))
-                elif message.__contains__("goblin"):
+                if message.__contains__("goblin"):
                     self.game.append_recently_killed(("goblin", act, arg1[0], arg1[1]))
-                elif message.__contains__("jackal"):
-                    self.game.append_recently_killed(("jackal", act, arg1[0], arg1[1]))
-                elif message.__contains__("newt"):
-                    self.game.append_recently_killed(("newt", act, arg1[0], arg1[1]))
+                elif message.__contains__("fox"):
+                    self.game.append_recently_killed(("fox", act, arg1[0], arg1[1]))
                 elif message.__contains__("rat"):
                     self.game.append_recently_killed(("rat", act, arg1[0], arg1[1]))
-                elif message.__contains__("acid blob"):
-                    self.game.append_recently_killed(("acid blob", act, arg1[0], arg1[1]))
-                elif message.__contains__("brown mold"):
-                    self.game.append_recently_killed(("brown mold", act, arg1[0], arg1[1]))
-                elif message.__contains__("red mold"):
-                    self.game.append_recently_killed(("red mold", act, arg1[0], arg1[1]))
-                elif message.__contains__("coyote"):
-                    self.game.append_recently_killed(("coyote", act, arg1[0], arg1[1]))
-                elif message.__contains__("gecko"):
-                    self.game.append_recently_killed(("gecko", act, arg1[0], arg1[1]))
-                elif message.__contains__("hobbit"):
-                    self.game.append_recently_killed(("hobbit", act, arg1[0], arg1[1]))
+                elif message.__contains__("newt"):
+                    self.game.append_recently_killed(("newt", act, arg1[0], arg1[1]))
+                elif message.__contains__("jackal"):
+                    self.game.append_recently_killed(("jackal", act, arg1[0], arg1[1]))
                 elif message.__contains__("shrieker"):
                     self.game.append_recently_killed(("shrieker", act, arg1[0], arg1[1]))
-                elif message.__contains__("cave spider"):
-                    self.game.append_recently_killed(("cave spider", act, arg1[0], arg1[1]))
-                elif message.__contains__("floating eye"):
-                    self.game.append_recently_killed(("floating eye", act, arg1[0], arg1[1]))
-                elif message.__contains__("garter snake"):
-                    self.game.append_recently_killed(("garter snake", act, arg1[0], arg1[1]))
-                elif message.__contains__("gnome"):
-                    self.game.append_recently_killed(("gnome", act, arg1[0], arg1[1]))
-                elif message.__contains__("hobgoblin"):
-                    self.game.append_recently_killed(("hobgoblin", act, arg1[0], arg1[1]))
-                elif message.__contains__("iguana"):
-                    self.game.append_recently_killed(("iguana", act, arg1[0], arg1[1]))
+                elif message.__contains__("hobbit"):
+                    self.game.append_recently_killed(("hobbit", act, arg1[0], arg1[1]))
+                elif message.__contains__("red mold"):
+                    self.game.append_recently_killed(("red mold", act, arg1[0], arg1[1]))
+                elif message.__contains__("green mold"):
+                    self.game.append_recently_killed(("green mold", act, arg1[0], arg1[1]))
+                elif message.__contains__("brown mold"):
+                    self.game.append_recently_killed(("brown mold", act, arg1[0], arg1[1]))
+                elif message.__contains__("acid blob"):
+                    self.game.append_recently_killed(("acid blob", act, arg1[0], arg1[1]))
+                elif message.__contains__("gecko"):
+                    self.game.append_recently_killed(("gecko", act, arg1[0], arg1[1]))
+                elif message.__contains__("coyote"):
+                    self.game.append_recently_killed(("coyote", act, arg1[0], arg1[1]))
+                elif message.__contains__("human"):  # new
+                    self.game.append_recently_killed(("human", act, arg1[0], arg1[1]))
                 elif message.__contains__("dog"):
                     self.game.append_recently_killed(("dog", act, arg1[0], arg1[1]))
                 elif message.__contains__("kitten"):
                     self.game.append_recently_killed(("kitten", act, arg1[0], arg1[1]))
-                elif message.__contains__("crocodile"):
-                    self.game.append_recently_killed(("crocodile", act, arg1[0], arg1[1]))
-                elif message.__contains__("pony"):
-                    self.game.append_recently_killed(("pony", act, arg1[0], arg1[1]))
-                elif message.__contains__("rothe"):
-                    self.game.append_recently_killed(("rothe", act, arg1[0], arg1[1]))
-                elif message.__contains__("mole"):
-                    self.game.append_recently_killed(("mole", act, arg1[0], arg1[1]))
+                elif message.__contains__("iguana"):
+                    self.game.append_recently_killed(("iguana", act, arg1[0], arg1[1]))
+                elif message.__contains__("floating eye"):
+                    self.game.append_recently_killed(("floating eye", act, arg1[0], arg1[1]))
                 elif message.__contains__("orc"):
                     self.game.append_recently_killed(("orc", act, arg1[0], arg1[1]))
+                elif message.__contains__("Keystone Kop"):
+                    self.game.append_recently_killed(("Keystone Kop", act, arg1[0], arg1[1]))
+                elif message.__contains__("hobgoblin"):
+                    self.game.append_recently_killed(("hobgoblin", act, arg1[0], arg1[1]))
+                elif message.__contains__("gnome"):
+                    self.game.append_recently_killed(("gnome", act, arg1[0], arg1[1]))
+                elif message.__contains__("garter snake"):
+                    self.game.append_recently_killed(("garter snake", act, arg1[0], arg1[1]))
+                elif message.__contains__("cave spider"):
+                    self.game.append_recently_killed(("cave spider", act, arg1[0], arg1[1]))
+                elif message.__contains__("leprechaun"):
+                    self.game.append_recently_killed(("leprechaun", act, arg1[0], arg1[1]))
+                elif message.__contains__("woodchuck"):
+                    self.game.append_recently_killed(("woodchuck", act, arg1[0], arg1[1]))
+                elif message.__contains__("mole"):
+                    self.game.append_recently_killed(("mole", act, arg1[0], arg1[1]))
+                elif message.__contains__("imp"):  # new
+                    self.game.append_recently_killed(("imp", act, arg1[0], arg1[1]))
+                elif message.__contains__("pony"):
+                    self.game.append_recently_killed(("pony", act, arg1[0], arg1[1]))
+                elif message.__contains__("piercer"):
+                    self.game.append_recently_killed(("piercer", act, arg1[0], arg1[1]))
+                elif message.__contains__("naga hatchling"):
+                    self.game.append_recently_killed(("naga hatchling", act, arg1[0], arg1[1]))
+                elif message.__contains__("crocodile"):
+                    self.game.append_recently_killed(("crocodile", act, arg1[0], arg1[1]))
+                elif message.__contains__("dwarf"):  # new
+                    self.game.append_recently_killed(("dwarf", act, arg1[0], arg1[1]))
+                elif message.__contains__("centipede"):
+                    self.game.append_recently_killed(("centipede", act, arg1[0], arg1[1]))
+                elif message.__contains__("monkey"):
+                    self.game.append_recently_killed(("monkey", act, arg1[0], arg1[1]))
+                elif message.__contains__("blue jelly"):
+                    self.game.append_recently_killed(("blue jelly", act, arg1[0], arg1[1]))
+                elif message.__contains__("housecat"):
+                    self.game.append_recently_killed(("housecat", act, arg1[0], arg1[1]))
+                elif message.__contains__("dingo"):
+                    self.game.append_recently_killed(("dingo", act, arg1[0], arg1[1]))
+                elif message.__contains__("Uruk-hai"):
+                    self.game.append_recently_killed(("Uruk-hai", act, arg1[0], arg1[1]))
+                elif message.__contains__("bugbear"):
+                    self.game.append_recently_killed(("bugbear", act, arg1[0], arg1[1]))
+                elif message.__contains__("naga"):
+                    self.game.append_recently_killed(("naga", act, arg1[0], arg1[1]))
+                elif message.__contains__("rothe"):
+                    self.game.append_recently_killed(("rothe", act, arg1[0], arg1[1]))
                 elif message.__contains__("ant"):
                     self.game.append_recently_killed(("ant", act, arg1[0], arg1[1]))
 
@@ -802,9 +841,7 @@ class Eat(Task):
         message = self.game.parse_all()
         stats = self.game.get_bl_stats()
 
-        if message.__contains__("yellow mold"):
-            return False
-        if message.__contains__("acid blob") and stats[10] < 20:
+        if (message.__contains__("acid blob") or message.__contains__("green mold") or message.__contains__("black naga")) and stats[10] < 20:
             return False
 
         agent = self.game.get_agent_position()
@@ -860,6 +897,9 @@ class Eat(Task):
         gnam = False
         if parsed_all.__contains__("kobold") or \
                 parsed_all.__contains__("rabid") or \
+                parsed_all.__contains__("guardian naga") or \
+                parsed_all.__contains__("yellow mold") or \
+                parsed_all.__contains__("were") or \
                 parsed_all.__contains__("soldier ant") or \
                 parsed_all.__contains__("homunculus"):
             self.game.append_inedible((arg1[0], arg1[1]))
@@ -875,7 +915,9 @@ class Eat(Task):
                 parsed_all.__contains__("garlic") or \
                 parsed_all.__contains__("meat") or \
                 parsed_all.__contains__("egg") or \
-                parsed_all.__contains__("orange") or \
+                (parsed_all.__contains__("orange") and
+                 not parsed_all.__contains__("gem") and
+                 not parsed_all.__contains__("potion")) or \
                 parsed_all.__contains__("banana") or \
                 parsed_all.__contains__("wafer") or \
                 parsed_all.__contains__("candy") or \

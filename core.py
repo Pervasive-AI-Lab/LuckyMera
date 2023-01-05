@@ -73,6 +73,7 @@ class GameWhisperer:
         self.fast_mode = fast_mode
         self.stuck_counter = 0
         self.hard_search_num = 0
+        self.elbereth_violated = 0
         # if not self.fast_mode:
         # env.render()
 
@@ -438,6 +439,23 @@ class GameWhisperer:
             #    return False
             else:
                 return True
+        else:
+            return False
+
+    def is_passive_monster(self, y, x):
+        """
+            function that checks if a given tile is a passive monster
+
+            :param y: tile y/vertical coordinate
+            :param x: tile x/horiziontal coordinate
+            :return: TRUE -> if given tile is a monster, FALSE -> elsewise
+        """
+
+        char = self.char_obs[y][x]
+        color = self.color_obs[y][x]
+
+        if char == 98 or char == 99 or char == 101 or char == 80 or char == 82 or char == 70 or char == 64:
+            return True
         else:
             return False
 
@@ -976,6 +994,7 @@ class GameWhisperer:
 
         self.current_obs = env.reset()
         self.new_turn = 0
+        self.elbereth_violated = 0
         self.old_turn = 0
         self.update_obs()
         self.reset_memory()
@@ -1012,6 +1031,12 @@ class GameWhisperer:
         self.recently_killed = []
         self.shop_tiles = []
         self.inedible = []
+
+    def get_elbereth_violation(self):
+        return self.elbereth_violated
+
+    def set_elbereth_violation(self):
+        self.elbereth_violated = self.act_num
 
     def check_exception(self, tile):
         return self.exception.__contains__((tile[0], tile[1]))
