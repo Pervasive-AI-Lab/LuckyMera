@@ -86,7 +86,7 @@ class StairsAscent(Task):
          """
 
         if stats[12] == 1 or 2 <= stats[21] <= 4 or stats[18] >= stats[
-             12] + 2:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
+             12] + 3:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
             return None, None, None
         known, coords = self.custom_contain(self.game.get_stairs_locations()[0], stats[12])
         if not known:
@@ -141,7 +141,7 @@ class Pray(Task):
                      arg1 -> extra optional output (None)
          """
 
-        if (3 <= stats[21] <= 4 or stats[10] <= 6 or (
+        if (stats[21] == 4 or stats[10] <= 6 or (
                 stats[11] != 0 and (stats[10] / stats[11]) < 0.14)) and (
                 abs(self.game.get_last_pray() - stats[20]) >= 500 or self.game.get_last_pray() == -1) and stats[
              20] > 100:
@@ -184,7 +184,7 @@ class Elbereth(Task):
                      arg1 -> extra optional output (None)
          """
 
-        if abs(self.game.get_elbereth_violation() - stats[20]) < 10 or 3 <= stats[21] <= 4:
+        if abs(self.game.get_elbereth_violation() - stats[20]) < 7 or stats[21] == 4:
             return None, None, None  # 1.1.8.6
         for tile in self.game.neighbors_8_dir(agent[0], agent[1]):
             char = self.game.get_char(tile[0], tile[1])
@@ -194,7 +194,7 @@ class Elbereth(Task):
                 return None, None, None  # 1.1.8.2
 
         # not self.game.check_engraved(agent) and
-        if self.game.get_risk(agent[0], agent[1]) > 4 or (stats[11] != 0 and (stats[10] / stats[11]) < 0.65):
+        if self.game.get_risk(agent[0], agent[1]) > 4 or (stats[11] != 0 and (stats[10] / stats[11]) < 0.75):
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):
@@ -219,12 +219,13 @@ class Elbereth(Task):
         # risk = self.game.get_risk(agent[0], agent[1])
         # ((stats[11] != 0 and (stats[10] / stats[11]) < 0.8) or risk > 2)
         while (stats[11] != 0 and (stats[10] / stats[11]) < 0.9) \
-                and not done:  # and not (w_count > 1 and risk >= 2):
+                and not done and stats[21] < 4:  # and not (w_count > 1 and risk >= 2):
             rew, done, info = self.game.do_it(75, None)  # wait - with search
             if not self.game.get_fast_mode():
                 print("\nElbereth WAIT ---\n")
             # risk = self.game.get_risk(agent[0], agent[1])
             # w_count += 1
+            stats = self.game.get_bl_stats()
             message = self.game.get_parsed_message()
             if message.__contains__("hit") or \
                     message.__contains__("bite") or \
@@ -822,6 +823,8 @@ class Fight(Task):
                     self.game.append_recently_killed(("rothe", act, arg1[0], arg1[1]))
                 elif message.__contains__("ant"):
                     self.game.append_recently_killed(("ant", act, arg1[0], arg1[1]))
+                elif message.__contains__("gray ooze"):
+                    self.game.append_recently_killed(("gray ooze", act, arg1[0], arg1[1]))
 
         return rew, done, info
 
@@ -841,7 +844,7 @@ class Eat(Task):
         message = self.game.parse_all()
         stats = self.game.get_bl_stats()
 
-        if (message.__contains__("acid blob") or message.__contains__("green mold") or message.__contains__("black naga")) and stats[10] < 20:
+        if (message.__contains__("gray ooze") or message.__contains__("acid blob") or message.__contains__("green mold") or message.__contains__("black naga")) and stats[10] < 20:
             return False
 
         agent = self.game.get_agent_position()
@@ -897,6 +900,7 @@ class Eat(Task):
         gnam = False
         if parsed_all.__contains__("kobold") or \
                 parsed_all.__contains__("rabid") or \
+                parsed_all.__contains__("bat") or \
                 parsed_all.__contains__("guardian naga") or \
                 parsed_all.__contains__("yellow mold") or \
                 parsed_all.__contains__("were") or \
@@ -945,13 +949,13 @@ class Eat(Task):
             if message.__contains__("eat") and message.__contains__("?"):
                 self.game.yes()
                 gnam = True
-        elif stats[21] == 4:
-            self.game.reset_inedible()
-            self.game.do_it(35, None)  # eat
-            message = self.game.get_parsed_message()
-            if message.__contains__("eat") and message.__contains__("?"):
-                self.game.yes()
-                gnam = True
+        #elif stats[21] == 4:
+            #self.game.reset_inedible()
+            #self.game.do_it(35, None)  # eat
+            #message = self.game.get_parsed_message()
+            #if message.__contains__("eat") and message.__contains__("?"):
+                #self.game.yes()
+                #gnam = True
         if not gnam:
             self.game.append_inedible((arg1[0], arg1[1]))
         return None, None, None

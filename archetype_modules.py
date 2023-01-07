@@ -17,7 +17,7 @@ class Task:
             self.game.update_obs()
             agent = self.game.get_agent_position()
 
-            if self.game.get_risk(agent[0], agent[1]) > 1:
+            if self.game.get_risk(agent[0], agent[1]) > 1 or self.game.get_bl_stats()[21] == 4:
                 self.game.notify_recently_ejected()
                 return True
         return False
