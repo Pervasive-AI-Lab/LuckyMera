@@ -74,6 +74,7 @@ class GameWhisperer:
         self.stuck_counter = 0
         self.hard_search_num = 0
         self.elbereth_violated = 0
+        self.depth_turns = {}
         # if not self.fast_mode:
         # env.render()
 
@@ -898,7 +899,11 @@ class GameWhisperer:
             # go_back(27)
             env.render()
             # time.sleep(0.05)
+
         self.new_turn = self.bl_stats[20]
+        self.depth_turns.setdefault(str(self.bl_stats[12]), 0)
+        self.depth_turns[str(self.bl_stats[12])] += abs(self.old_turn - self.new_turn)
+
         return rew, done, info
 
     def shop_propagation(self, tile):
@@ -1014,6 +1019,7 @@ class GameWhisperer:
         self.total_score += self.score
         self.score = 0
         self.recently_killed = []
+        self.depth_turns = {}
         self.last_pray = -1
 
     def partial_reset_game(self):
@@ -1200,6 +1206,9 @@ class GameWhisperer:
 
     def get_fast_mode(self):
         return self.fast_mode
+
+    def get_depth_turns(self, d):
+        return self.depth_turns[str(d)]
 
     def do_panic(self):
         self.panic = True

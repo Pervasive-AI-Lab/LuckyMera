@@ -20,15 +20,15 @@ class StairsDescent(Task):
         if not self.custom_contain(self.game.get_stairs_locations()[0], stats[12])[0]:
             found, y, x = self.game.find(self.standard_condition, [60])
             if found:
-                self.game.get_stairs_locations()[0].append((stats[12], y, x))
+                self.game.append_stairs_location((stats[12], y, x), True)  # 1.1.9
 
         if not self.custom_contain(self.game.get_stairs_locations()[1], stats[12])[0]:
             found, y, x = self.game.find(self.standard_condition, [62])
             if found:
-                self.game.get_stairs_locations()[1].append((stats[12], y, x))
+                self.game.append_stairs_location((stats[12], y, x), False)  # 1.1.9
 
-        if not 2 <= stats[21] <= 4 or stats[18] + 1 <= stats[
-             12]:  # and not self.bl_stats[18] >= self.bl_stats[12] + 3: v2.0
+        if (not 2 <= stats[21] <= 4 or self.game.get_depth_turns(stats[12]) < 500) or stats[18] + 1 <= stats[12]:
+            # and not self.bl_stats[18] >= self.bl_stats[12] + 3: v2.0
             return None, None, None
 
         known, coords = self.custom_contain(self.game.get_stairs_locations()[1], stats[12])
@@ -85,8 +85,7 @@ class StairsAscent(Task):
                      arg1 -> extra optional output (target's coordinates in this case)
          """
 
-        if stats[12] == 1 or 2 <= stats[21] <= 4 or stats[18] >= stats[
-             12] + 3:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
+        if stats[12] == 1 or 2 <= stats[21] <= 4:  # or stats[18] >= stats[12] + 3:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
             return None, None, None
         known, coords = self.custom_contain(self.game.get_stairs_locations()[0], stats[12])
         if not known:
