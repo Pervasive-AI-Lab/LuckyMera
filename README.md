@@ -9,7 +9,7 @@ Agent Judy_Bot_T3 was developed as a thesis project following the bachelor's deg
 Starting from version 1.1.7, the agent is able to obtain an average score of 744 and a median score of 645. Scores acquired by playing the "NetHackChallenge-v0" task through the
 [NetHack Learning Environment](https://github.com/facebookresearch/nle) framework.
 
-Starting from version 1.1.9 the agent is now able to obtain an average score of 1046.96 and a median score of 817
+[UPDATE] Starting from version 1.1.9 the agent is now able to obtain an average score of 1046.96 and a median score of 817
 
 The code is completely open-source and has been designed with the aim of complying with the principles of configurability, 
 modularity and extensibility. It is in fact possible to extend the agent through the implementation of modules dedicated to the planning and execution of new tasks.
