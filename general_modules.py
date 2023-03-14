@@ -1,4 +1,37 @@
 from archetype_modules import Task
+import random
+
+from minihack.agent.polybeast.evaluate import load_model, get_action
+
+class NeuralWalk(Task):
+    def __init__(self, dungeon_walker, game, task_name):
+        super().__init__(dungeon_walker, game, task_name)
+        self.model, self.hidden = load_model('challenge', '/home/lquarantiello/minihack/minihack/agent/polybeast/outputs/Room-Ultimate-15x15_IMPALA_2e7')
+
+    #using the rl model to walk is always possible
+    def planning(self, stats, safe_play, agent):
+        return self.name, None, None
+    
+    def execution(self, path, arg1, agent, stats):
+        action, self.hidden = get_action(self.model, self.game.current_obs, self.hidden, done=False, watch=False)
+        print(f"Action selected: {action}")
+        rew, done, info = self.game.do_it(action, None)
+        return rew, done, info
+
+class RandomWalk(Task):
+    def __init__(self, dungeon_walker, game, task_name):
+        super().__init__(dungeon_walker, game, task_name)
+
+    #random walking is always applicable
+    def planning(self, stats, safe_play, agent):
+        return self.name, None, None
+
+    def execution(self, path, arg1, agent, stats):
+        #movement action are from id 0 to 7 included
+        move_action = random.randint(0,7)
+        print(f"Movement action selected: {move_action}")
+        rew, done, info = self.game.do_it(move_action, None)
+        return rew, done, info
 
 
 class StairsDescent(Task):
