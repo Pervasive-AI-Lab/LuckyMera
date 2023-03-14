@@ -9,7 +9,7 @@ import numpy
 
 numpy.set_printoptions(threshold=sys.maxsize)
 
-env = gym.make('NetHackChallenge-v0', )
+env = gym.make('NetHackChallenge-v0')
 
 
 class GameWhisperer:
@@ -583,7 +583,7 @@ class GameWhisperer:
                 continue
             if glyph is None:
                 if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0],
-                                                                                                         next_tile[1]):
+                                                                                                            next_tile[1]):
                     same_glyph_count += 1
             else:
                 char = glyph[0]
@@ -756,12 +756,11 @@ class GameWhisperer:
 
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(5)
-        self.update_obs()
+            self.update_obs()
 
     def more(self):
         """
             function that perform the action "no" of NetHack
-
             :return: //
         """
 
@@ -778,8 +777,8 @@ class GameWhisperer:
             :param x: numeric value of the action to be performed according to the NLE implementation
             :param direction: optional value useful when some actions require a direction to be performed
             :return: the "reward" value (1 if episode success, 0 elsewise),
-                     the "done" value (TRUE if the episode endend, FALSE elsewise),
-                     the "info" object containg extra information (Gym standard implementation)
+                        the "done" value (TRUE if the episode endend, FALSE elsewise),
+                        the "info" object containg extra information (Gym standard implementation)
         """
 
         # print(self.bl_stats)
@@ -792,7 +791,7 @@ class GameWhisperer:
             print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
         if self.bl_stats[20] % 100 == 0:
             print("actual score: ", self.bl_stats[9], " turn: ",
-                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
+                    self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
             go_back(2)
 
         if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
@@ -1244,7 +1243,7 @@ class DungeonWalker:
             :param oy: objective tile y/vertical coordinate
             :param ox: objective tile x/horiziontal coordinate
             :return: came_from -> dictionary containing the associations between the tiles of the identified path
-                     cost_so_far -> dictionary containing the costs for moving in each tile of the identified path
+                        cost_so_far -> dictionary containing the costs for moving in each tile of the identified path
         """
 
         # voglio che restituisca il cammino
@@ -1341,51 +1340,51 @@ class DungeonWalker:
         return yellow_brick_road
 
 
-# metodo che pianifica la task da eseguire in un dato stato
+    # metodo che pianifica la task da eseguire in un dato stato
 def planning(game, tasks_prio, task_map):
-    """
-        function that plan the best task to perform, according to the in-game state of the agent
-        and the tasks priority establied by the user in agent's configuration
+        """
+            function that plan the best task to perform, according to the in-game state of the agent
+            and the tasks priority establied by the user in agent's configuration
 
-        :param game: reference to the core "GameWhisperer" object
-        :param tasks_prio: starting tile x/horiziontal coordinate
-        :param task_map: objective tile y/vertical coordinate
-        :return: task_name -> a string containing the identification name of the planned task
-                 path -> an optional path useful in planned task's execution
-                 arg1 -> an optional extra argument useful for some task's execution
-    """
+            :param game: reference to the core "GameWhisperer" object
+            :param tasks_prio: starting tile x/horiziontal coordinate
+            :param task_map: objective tile y/vertical coordinate
+            :return: task_name -> a string containing the identification name of the planned task
+                     path -> an optional path useful in planned task's execution
+                     arg1 -> an optional extra argument useful for some task's execution
+        """
 
-    if game.get_new_turn() == game.get_old_turn():
-        game.stuck()
-    else:
-        game.reset_stuck_counter()
+        if game.get_new_turn() == game.get_old_turn():
+            game.stuck()
+        else:
+            game.reset_stuck_counter()
 
-    if not game.update_agent():
+        if not game.update_agent():
+            return "failure", None, None
+        else:
+            game.update_obs()
+
+        stats = game.get_bl_stats()
+        safe_play = game.get_safe_play()
+        agent = game.get_agent_position()
+
+        while len(tasks_prio) > 0:
+            task_name = tasks_prio.pop(0)
+            task = task_map[task_name]
+
+            out = task.planning(stats, safe_play, agent)
+            if out is not None:
+                task_name_o = out[0]
+                path = out[1]
+                arg1 = out[2]
+                if task_name_o is not None:
+                    return task_name, path, arg1
+
         return "failure", None, None
-    else:
-        game.update_obs()
-
-    stats = game.get_bl_stats()
-    safe_play = game.get_safe_play()
-    agent = game.get_agent_position()
-
-    while len(tasks_prio) > 0:
-        task_name = tasks_prio.pop(0)
-        task = task_map[task_name]
-
-        out = task.planning(stats, safe_play, agent)
-        if out is not None:
-            task_name_o = out[0]
-            path = out[1]
-            arg1 = out[2]
-            if task_name_o is not None:
-                return task_name, path, arg1
-
-    return "failure", None, None
 
 
-# metodo che esegue le task pianificata
-def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
+    # metodo che esegue le task pianificata
+def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_dataset):
     """
         function that plan the best task to perform, according to the in-game state of the agent
         and the tasks priority establied by the user in agent's configuration
@@ -1401,6 +1400,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
     success = 0
     scores = []
     mediana = 0
+    if create_dataset: observations = []
 
     for i in range(0, attempts):
 
@@ -1438,7 +1438,10 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
             print(scores)
 
         while not done:
+            if create_dataset:
+                observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
             task, path, arg1 = planning(game, tasks_prio.copy(), task_map)
+            #assert task == 'NeuralWalk', 'Other task executed!'
             if not game.get_fast_mode():
                 print("TASK: ", task, " PATH: ", path)
 
@@ -1460,6 +1463,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
                     game.reset_memory()
                 game.hard_search()
                 game.increment_hard_search_num()
+                action = 75
                 rew, done, info = game.do_it(75, None)  # search per aspettare con value
             else:
                 rew, done, info = task_map[task].execution(path, arg1, agent, stats)
@@ -1467,6 +1471,10 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
         if rew == 1:
             success += 1
 
+        if create_dataset:
+            observations = numpy.array(observations)
+            with open('./prova.npy', 'wb') as f:
+                numpy.save(f, observations)
 
 def go_back(num_lines):
     print("\033[%dA" % num_lines)
