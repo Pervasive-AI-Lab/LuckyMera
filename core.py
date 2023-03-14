@@ -9,7 +9,7 @@ import numpy
 
 numpy.set_printoptions(threshold=sys.maxsize)
 
-env = gym.make('NetHackChallenge-v0', )
+env = gym.make('NetHackChallenge-v0')
 
 
 class GameWhisperer:
@@ -582,8 +582,7 @@ class GameWhisperer:
             if cross and next_tile[0] != y and next_tile[1] != x:
                 continue
             if glyph is None:
-                if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0],
-                                                                                                         next_tile[1]):
+                if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0], next_tile[1]):
                     same_glyph_count += 1
             else:
                 char = glyph[0]
@@ -760,8 +759,7 @@ class GameWhisperer:
 
     def more(self):
         """
-            function that perform the action "no" of NetHack
-
+            function that perform the action "more" of NetHack
             :return: //
         """
 
@@ -1385,7 +1383,7 @@ def planning(game, tasks_prio, task_map):
 
 
 # metodo che esegue le task pianificata
-def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
+def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_dataset):
     """
         function that plan the best task to perform, according to the in-game state of the agent
         and the tasks priority establied by the user in agent's configuration
@@ -1401,6 +1399,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
     success = 0
     scores = []
     mediana = 0
+    if create_dataset: observations = []
 
     for i in range(0, attempts):
 
@@ -1438,7 +1437,10 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
             print(scores)
 
         while not done:
+            if create_dataset:
+                observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
             task, path, arg1 = planning(game, tasks_prio.copy(), task_map)
+            #assert task == 'NeuralWalk', 'Other task executed!'
             if not game.get_fast_mode():
                 print("TASK: ", task, " PATH: ", path)
 
@@ -1467,6 +1469,10 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
         if rew == 1:
             success += 1
 
+        if create_dataset:
+            observations = numpy.array(observations)
+            with open('./prova.npy', 'wb') as f:
+                numpy.save(f, observations)
 
 def go_back(num_lines):
     print("\033[%dA" % num_lines)

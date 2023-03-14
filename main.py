@@ -1,8 +1,13 @@
+import sys
 import json
 import time
-from secret_passage_modules import HiddenRoom, HiddenCorridor
-from reach_modules import Gold, Unseen, Horizon
-from general_modules import Pray, Elbereth, Run, Break, Fight, Eat, StairsDescent, StairsAscent, ExploreClosest
+import argparse
+#from secret_passage_modules import HiddenRoom, HiddenCorridor
+#from reach_modules import Gold, Unseen, Horizon
+#from general_modules import Pray, Elbereth, Run, Break, Fight, Eat, StairsDescent, StairsAscent, ExploreClosest, RandomWalk
+import general_modules
+import reach_modules
+import secret_passage_modules
 from core import GameWhisperer, DungeonWalker, main_logic
 
 
@@ -39,7 +44,29 @@ def start_bot():
     task_prio = config['task_prio_list']
     task_modules_map = {}
     for i in range(0, len(task_prio)):
-        task = task_prio[i]
+        task_name = task_prio[i]
+        
+        if hasattr(general_modules, task_name): task_class = getattr(general_modules, task_name)
+        elif hasattr(reach_modules, task_name): task_class = getattr(reach_modules, task_name)
+        elif hasattr(secret_passage_modules, task_name): task_class = getattr(secret_passage_modules, task_name)
+        else: sys.exit('task not found')
+
+        task_modules_map[task_name] = task_class(walk_logic, game_interface, task_name)
+        print(task_name)
+        '''
+        try:
+            task_class = getattr(general_modules, task_name)
+        except:
+            try:
+                task_class = getattr(reach_modules, task_name)
+            except:
+                try:
+                    task_class = getattr(secret_passage_modules, task_name)
+                except:
+                   raise Exception('task not found')
+
+        '''
+        '''
         if task == "pray":
             task_modules_map[task] = Pray(walk_logic, game_interface, task)
         elif task == "take_a_break":
@@ -68,8 +95,11 @@ def start_bot():
             task_modules_map[task] = Unseen(walk_logic, game_interface, task)
         elif task == "search_hidden_corridor":
             task_modules_map[task] = HiddenCorridor(walk_logic, game_interface, task)
+        elif task == "random_walk":
+            task_modules_map[task] = RandomWalk(walk_logic, game_interface, task)
         print(task)
-        time.sleep(0.4)
+        '''
+        time.sleep(0.2)
 
     print("\nJudy is ready for YASD ...")
     print("\n\n")
@@ -77,7 +107,19 @@ def start_bot():
 
     return walk_logic, game_interface, task_prio, task_modules_map, games_number
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--create_dataset',
+        dest='create_dataset',
+        action='store_true',
+        help='Use the bot to generate a dataset of trajectories'
+    )
+    flags = parser.parse_args()
+    create_dataset = flags.create_dataset
+    
+    dungeon_walker, game, logic, task_map, attempts = start_bot()
+    main_logic(dungeon_walker, game, logic, task_map, attempts, create_dataset)
 
-dungeon_walker, game, logic, task_map, attempts = start_bot()
-
-main_logic(dungeon_walker, game, logic, task_map, attempts)
+if __name__ == "__main__":
+    main()
