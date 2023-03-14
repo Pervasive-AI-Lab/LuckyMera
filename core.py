@@ -776,8 +776,8 @@ class GameWhisperer:
             :param x: numeric value of the action to be performed according to the NLE implementation
             :param direction: optional value useful when some actions require a direction to be performed
             :return: the "reward" value (1 if episode success, 0 elsewise),
-                    the "done" value (TRUE if the episode endend, FALSE elsewise),
-                    the "info" object containg extra information (Gym standard implementation)
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
         """
 
         # print(self.bl_stats)
@@ -790,7 +790,7 @@ class GameWhisperer:
             print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
         if self.bl_stats[20] % 100 == 0:
             print("actual score: ", self.bl_stats[9], " turn: ",
-                    self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
+                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
             go_back(2)
 
         if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
@@ -1339,7 +1339,7 @@ class DungeonWalker:
         return yellow_brick_road
 
 
-    # metodo che pianifica la task da eseguire in un dato stato
+# metodo che pianifica la task da eseguire in un dato stato
 def planning(game, tasks_prio, task_map):
     """
         function that plan the best task to perform, according to the in-game state of the agent
@@ -1349,8 +1349,8 @@ def planning(game, tasks_prio, task_map):
         :param tasks_prio: starting tile x/horiziontal coordinate
         :param task_map: objective tile y/vertical coordinate
         :return: task_name -> a string containing the identification name of the planned task
-                    path -> an optional path useful in planned task's execution
-                    arg1 -> an optional extra argument useful for some task's execution
+                 path -> an optional path useful in planned task's execution
+                 arg1 -> an optional extra argument useful for some task's execution
     """
 
     if game.get_new_turn() == game.get_old_turn():
