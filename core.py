@@ -582,8 +582,7 @@ class GameWhisperer:
             if cross and next_tile[0] != y and next_tile[1] != x:
                 continue
             if glyph is None:
-                if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0],
-                                                                                                            next_tile[1]):
+                if self.glyph_obs[next_tile[0]][next_tile[1]] == self.glyph_obs[y][x] or self.is_doorway(next_tile[0], next_tile[1]):
                     same_glyph_count += 1
             else:
                 char = glyph[0]
@@ -756,11 +755,11 @@ class GameWhisperer:
 
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(5)
-            self.update_obs()
+        self.update_obs()
 
     def more(self):
         """
-            function that perform the action "no" of NetHack
+            function that perform the action "more" of NetHack
             :return: //
         """
 
@@ -777,8 +776,8 @@ class GameWhisperer:
             :param x: numeric value of the action to be performed according to the NLE implementation
             :param direction: optional value useful when some actions require a direction to be performed
             :return: the "reward" value (1 if episode success, 0 elsewise),
-                        the "done" value (TRUE if the episode endend, FALSE elsewise),
-                        the "info" object containg extra information (Gym standard implementation)
+                    the "done" value (TRUE if the episode endend, FALSE elsewise),
+                    the "info" object containg extra information (Gym standard implementation)
         """
 
         # print(self.bl_stats)
@@ -1243,7 +1242,7 @@ class DungeonWalker:
             :param oy: objective tile y/vertical coordinate
             :param ox: objective tile x/horiziontal coordinate
             :return: came_from -> dictionary containing the associations between the tiles of the identified path
-                        cost_so_far -> dictionary containing the costs for moving in each tile of the identified path
+                     cost_so_far -> dictionary containing the costs for moving in each tile of the identified path
         """
 
         # voglio che restituisca il cammino
@@ -1342,48 +1341,48 @@ class DungeonWalker:
 
     # metodo che pianifica la task da eseguire in un dato stato
 def planning(game, tasks_prio, task_map):
-        """
-            function that plan the best task to perform, according to the in-game state of the agent
-            and the tasks priority establied by the user in agent's configuration
+    """
+        function that plan the best task to perform, according to the in-game state of the agent
+        and the tasks priority establied by the user in agent's configuration
 
-            :param game: reference to the core "GameWhisperer" object
-            :param tasks_prio: starting tile x/horiziontal coordinate
-            :param task_map: objective tile y/vertical coordinate
-            :return: task_name -> a string containing the identification name of the planned task
-                     path -> an optional path useful in planned task's execution
-                     arg1 -> an optional extra argument useful for some task's execution
-        """
+        :param game: reference to the core "GameWhisperer" object
+        :param tasks_prio: starting tile x/horiziontal coordinate
+        :param task_map: objective tile y/vertical coordinate
+        :return: task_name -> a string containing the identification name of the planned task
+                    path -> an optional path useful in planned task's execution
+                    arg1 -> an optional extra argument useful for some task's execution
+    """
 
-        if game.get_new_turn() == game.get_old_turn():
-            game.stuck()
-        else:
-            game.reset_stuck_counter()
+    if game.get_new_turn() == game.get_old_turn():
+        game.stuck()
+    else:
+        game.reset_stuck_counter()
 
-        if not game.update_agent():
-            return "failure", None, None
-        else:
-            game.update_obs()
-
-        stats = game.get_bl_stats()
-        safe_play = game.get_safe_play()
-        agent = game.get_agent_position()
-
-        while len(tasks_prio) > 0:
-            task_name = tasks_prio.pop(0)
-            task = task_map[task_name]
-
-            out = task.planning(stats, safe_play, agent)
-            if out is not None:
-                task_name_o = out[0]
-                path = out[1]
-                arg1 = out[2]
-                if task_name_o is not None:
-                    return task_name, path, arg1
-
+    if not game.update_agent():
         return "failure", None, None
+    else:
+        game.update_obs()
+
+    stats = game.get_bl_stats()
+    safe_play = game.get_safe_play()
+    agent = game.get_agent_position()
+
+    while len(tasks_prio) > 0:
+        task_name = tasks_prio.pop(0)
+        task = task_map[task_name]
+
+        out = task.planning(stats, safe_play, agent)
+        if out is not None:
+            task_name_o = out[0]
+            path = out[1]
+            arg1 = out[2]
+            if task_name_o is not None:
+                return task_name, path, arg1
+
+    return "failure", None, None
 
 
-    # metodo che esegue le task pianificata
+# metodo che esegue le task pianificata
 def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_dataset):
     """
         function that plan the best task to perform, according to the in-game state of the agent
@@ -1463,7 +1462,6 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_data
                     game.reset_memory()
                 game.hard_search()
                 game.increment_hard_search_num()
-                action = 75
                 rew, done, info = game.do_it(75, None)  # search per aspettare con value
             else:
                 rew, done, info = task_map[task].execution(path, arg1, agent, stats)
