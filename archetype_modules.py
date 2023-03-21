@@ -77,8 +77,7 @@ class Task:
             next_tile = self.game.inverse_move_translator(agent[0], agent[1], action)
             if self.game.update_agent():
                 if self.game.get_char(next_tile[0], next_tile[1]) == 37 and not self.surely_not_a_trap(next_tile[0],
-                                                                                                       next_tile[
-                                                                                                           1]):  # se la prossima casella contiene del cibo
+                                                                                                       next_tile[1]):  # se la prossima casella contiene del cibo
                     for k in range(0, 10):
                         # modifica 1.1
                         self.game.do_it(96, action)  # untrap
