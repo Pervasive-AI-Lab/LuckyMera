@@ -11,7 +11,7 @@ import secret_passage_modules
 from core import GameWhisperer, DungeonWalker, main_logic
 
 
-def start_bot():
+def start_bot(create_dataset):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -38,7 +38,7 @@ def start_bot():
         games_number = 100
     time.sleep(0.5)
 
-    game_interface = GameWhisperer(mode)
+    game_interface = GameWhisperer(mode, create_dataset)
     walk_logic = DungeonWalker(game_interface)
 
     task_prio = config['task_prio_list']
@@ -118,8 +118,8 @@ def main():
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
     
-    dungeon_walker, game, logic, task_map, attempts = start_bot()
-    main_logic(dungeon_walker, game, logic, task_map, attempts, create_dataset)
+    dungeon_walker, game, logic, task_map, attempts = start_bot(create_dataset)
+    main_logic(dungeon_walker, game, logic, task_map, attempts)
 
 if __name__ == "__main__":
     main()

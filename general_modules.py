@@ -21,6 +21,7 @@ class NeuralWalk(Task):
 class RandomWalk(Task):
     def __init__(self, dungeon_walker, game, task_name):
         super().__init__(dungeon_walker, game, task_name)
+        self.counter = 0
 
     #random walking is always applicable
     def planning(self, stats, safe_play, agent):
@@ -31,6 +32,8 @@ class RandomWalk(Task):
         move_action = random.randint(0,7)
         print(f"Movement action selected: {move_action}")
         rew, done, info = self.game.do_it(move_action, None)
+        self.counter += 1
+        print(f'RandomWalk counter: {self.counter}')
         return rew, done, info
 
 

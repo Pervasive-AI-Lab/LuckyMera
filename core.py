@@ -11,10 +11,26 @@ numpy.set_printoptions(threshold=sys.maxsize)
 
 env = gym.make('NetHackChallenge-v0')
 
+class Saver:
+    def __init__(self):
+        self.observations = []
+        self.actions = []
+
+    def save_obs_and_action(self, observation, action):
+        self.observations.append(numpy.concatenate((observation['chars'].flatten(), observation['colors'].flatten()), axis=None))
+        self.actions.append(action)
+
+    def save_to_file(self, filename):
+        self.observations = numpy.array(self.observations) 
+        self.actions = numpy.array(self.actions)
+
+        with open(filename, 'wb') as f:
+           numpy.savez(f, observations = self.observations, actions = self.actions) 
+
 
 class GameWhisperer:
 
-    def __init__(self, fast_mode):
+    def __init__(self, fast_mode, create_dataset):
         self.a_yx = [-1, -1]
         self.walkable_glyphs = [(33, -1), (34, -1), (35, 7), (35, 15), (36, -1), (37, -1), (40, -1), (41, -1), (42, -1),
                                 (46, -1),
@@ -75,6 +91,7 @@ class GameWhisperer:
         self.hard_search_num = 0
         self.elbereth_violated = 0
         self.depth_turns = {}
+        if create_dataset: self.saver = Saver()
         # if not self.fast_mode:
         # env.render()
 
@@ -767,12 +784,168 @@ class GameWhisperer:
             self.current_obs, rew, done, info = env.step(19)
         self.update_obs()
 
+    #new version, not working
+    """
+    def do_it(self, x, direction):
+        ""
+            function for sending input to the game terminal.
+            It offers the management of specific cases, automating some actions.
+            ex: Engraving Elbereth
+
+            :param x: numeric value of the action to be performed according to the NLE implementation
+            :param direction: optional value useful when some actions require a direction to be performed
+            :return: the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
+        ""
+
+        # print(self.bl_stats)
+        self.old_turn = self.bl_stats[20]
+        rew = 0
+        done = False
+        info = None
+
+        #printing some information
+        if not self.fast_mode:
+            print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
+        if self.bl_stats[20] % 100 == 0:
+            print("actual score: ", self.bl_stats[9], " turn: ",
+                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
+            go_back(2)
+
+        #update some variables in memory
+        if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
+            self.pet_alive = False
+        if self.act_num % 50 == 0:  # modifica
+            self.panic = False
+        if self.ran:
+            if abs(self.ran_turn - self.bl_stats[20]) > self.ran_cooldown:
+                self.ran = False
+        if self.score < self.bl_stats[9]:
+            self.score = self.bl_stats[9]
+
+        #actual execution of the action
+        #to be sure, execute ESC before
+        if self.update_agent():
+            #self.current_obs, rew, done, info = env.step(38)
+            ""
+            if self.parsed_message.__contains__("Closed for inventory"):
+                for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
+                    if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
+                        self.shop_tiles.append(tile)
+            ""
+            self.current_obs, rew, done, info = env.step(38)
+            self.current_obs, rew, done, info = env.step(x)
+        self.update_obs()
+
+        ""
+        if self.update_agent():
+            self.current_obs, rew, done, info = env.step(38)
+
+        if self.update_agent():
+            self.current_obs, rew, done, info = env.step(x)
+        self.update_obs()
+        ""
+
+        #react to different messages
+        if self.parsed_message.__contains__("Hello stranger, who are you?"):  # respond Croesus
+            self.guard_encounter += 1
+            return -1, True, None
+
+        if self.parsed_message.__contains__("Closed for inventory"):
+            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
+                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
+                    self.shop_tiles.append(tile)
+
+        if self.parsed_message.__contains__("swap"):
+            self.pet_alive = True
+            self.pet_alive_turn = self.bl_stats[20]
+
+        if direction is not None and self.parsed_message.__contains__("In what direction?"):
+            self.current_obs, rew, done, info = env.step(direction)
+            self.update_obs()
+
+        if self.parsed_message.__contains__("Are you sure you want to pray?") or self.parsed_message.__contains__(
+                "Really attack"):
+            self.yes()
+
+        if self.parsed_message.__contains__("You are carrying too much to get through."):
+            next_tile = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], x)
+            self.exception.append(next_tile)
+            self.update_obs()
+
+        if self.parsed_message.__contains__("What do you want to write with?"):
+            self.current_obs, rew, done, info = env.step(106)  # -
+            self.update_obs()
+
+        if self.parsed_message.__contains__("Do you want to add to the current engraving?"):
+            self.no()
+
+        if self.parsed_message.__contains__("You wipe out the message that was written in the dust here."):
+            self.no()
+
+        if self.parsed_message.__contains__("You write in the dust with your fingertip."):
+            self.more()
+
+        #automatically engrave Elbereth
+        if self.parsed_message.__contains__("What do you want to write in the dust here?"):
+            self.current_obs, rew, done, info = env.step(36)  # E
+            self.current_obs, rew, done, info = env.step(1)  # l
+            self.current_obs, rew, done, info = env.step(6)  # b
+            self.current_obs, rew, done, info = env.step(35)  # e
+            self.current_obs, rew, done, info = env.step(67)  # r
+            self.current_obs, rew, done, info = env.step(35)  # e
+            self.current_obs, rew, done, info = env.step(91)  # t
+            self.current_obs, rew, done, info = env.step(3)  # h
+            self.more()
+            self.update_obs()
+
+        if self.parsed_message.__contains__("You swap places"):
+            self.pet_alive = True
+
+        if self.parsed_message.__contains__("Closed for inventory"):
+            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
+                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
+                    self.shop_tiles.append(tile)
+
+        if ((self.parsed_message.__contains__("Welcome") and self.parsed_message.__contains__(
+                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) \
+                and not 0 <= self.bl_stats[20] <= 5:
+            self.shop_propagation(self.a_yx)
+
+        #enable/disable SAFE_MODE
+        if self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) <= 0.5 and not self.safe_play:
+            if not self.fast_mode: print("SAFE_MODE : enabled")
+            self.safe_play = True
+        elif self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) > 0.85 and self.safe_play:
+            if not self.fast_mode: print("SAFE_MODE : disabled")
+            self.safe_play = False
+
+        self.act_num += 1
+        if self.update_agent():
+            self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
+            if x == 75:  # it was a search
+                self.search_map[self.a_yx[0]][self.a_yx[1]] = 1
+                for next_tile in self.neighbors_8_dir(self.a_yx[0], self.a_yx[1]):
+                    self.search_map[next_tile[0]][next_tile[1]] = 1
+        if not self.fast_mode:  # and x != 10:
+            # go_back(27)
+            env.render()
+            # time.sleep(0.05)
+
+        self.new_turn = self.bl_stats[20]
+        self.depth_turns.setdefault(str(self.bl_stats[12]), 0)
+        self.depth_turns[str(self.bl_stats[12])] += abs(self.old_turn - self.new_turn)
+
+        return rew, done, info
+    """
+
+    #old version, working
     def do_it(self, x, direction):
         """
             function for sending input to the game terminal.
             It offers the management of specific cases, automating some actions.
             ex: Engraving Elbereth
-
             :param x: numeric value of the action to be performed according to the NLE implementation
             :param direction: optional value useful when some actions require a direction to be performed
             :return: the "reward" value (1 if episode success, 0 elsewise),
@@ -810,11 +983,13 @@ class GameWhisperer:
 
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(38)
+            self.update_obs()
 
             if self.parsed_message.__contains__("Closed for inventory"):
                 for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
                     if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
                         self.shop_tiles.append(tile)
+                #observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
 
         if self.score < self.bl_stats[9]:
             self.score = self.bl_stats[9]
@@ -825,6 +1000,7 @@ class GameWhisperer:
 
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(38)
+        self.update_obs()
 
         if self.update_agent():
             self.current_obs, rew, done, info = env.step(x)
@@ -897,6 +1073,8 @@ class GameWhisperer:
             # go_back(27)
             env.render()
             # time.sleep(0.05)
+        if self.saver:
+            self.saver.save_obs_and_action(self.current_obs, x)
 
         self.new_turn = self.bl_stats[20]
         self.depth_turns.setdefault(str(self.bl_stats[12]), 0)
@@ -1383,7 +1561,7 @@ def planning(game, tasks_prio, task_map):
 
 
 # metodo che esegue le task pianificata
-def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_dataset):
+def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
     """
         function that plan the best task to perform, according to the in-game state of the agent
         and the tasks priority establied by the user in agent's configuration
@@ -1399,7 +1577,6 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_data
     success = 0
     scores = []
     mediana = 0
-    if create_dataset: observations = []
 
     for i in range(0, attempts):
 
@@ -1437,8 +1614,6 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_data
             print(scores)
 
         while not done:
-            if create_dataset:
-                observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
             task, path, arg1 = planning(game, tasks_prio.copy(), task_map)
             #assert task == 'NeuralWalk', 'Other task executed!'
             if not game.get_fast_mode():
@@ -1469,10 +1644,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts, create_data
         if rew == 1:
             success += 1
 
-        if create_dataset:
-            observations = numpy.array(observations)
-            with open('./prova.npy', 'wb') as f:
-                numpy.save(f, observations)
+    if game.saver: game.saver.save_to_file('prova.npy')
 
 def go_back(num_lines):
     print("\033[%dA" % num_lines)
