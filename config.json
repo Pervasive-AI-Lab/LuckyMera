@@ -1,21 +1,22 @@
 {"task_prio_list": [
 
-"pray",
-"time_of_the_lunch",
-"engrave_elbereth",
-"run_for_your_life",
-"take_a_break",
-"close_monster_fight",
-"greed_of_gold",
-"stairs_descent",
-"stairs_ascent",
-"reach_closest_explorable",
-"reach_horizon",
-"explore_unseen",
-"search_hidden_room",
-"search_hidden_corridor"
+"RandomWalk",
+"Pray",
+"Eat",
+"Elbereth",
+"Run",
+"Break",
+"Fight",
+"Gold",
+"StairsDescent",
+"StairsAscent",
+"ExploreClosest",
+"Horizon",
+"Unseen",
+"HiddenRoom",
+"HiddenCorridor"
 ],
 
 "fast_mode": "on",
-"attempts": "100"
+"attempts": "1"
 }
