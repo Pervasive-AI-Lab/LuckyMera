@@ -11,26 +11,30 @@ numpy.set_printoptions(threshold=sys.maxsize)
 
 env = gym.make('NetHackChallenge-v0')
 
+# utility class to save trajectories
+# we use chars and colors from each observation
+# each item is <chars + colors, action>
 class Saver:
-    def __init__(self):
+    def __init__(self, filename):
         self.observations = []
         self.actions = []
+        self.filename = filename
 
     def save_obs_and_action(self, observation, action):
         self.observations.append(numpy.concatenate((observation['chars'].flatten(), observation['colors'].flatten()), axis=None))
         self.actions.append(action)
 
-    def save_to_file(self, filename):
+    def save_to_file(self):
         self.observations = numpy.array(self.observations) 
         self.actions = numpy.array(self.actions)
 
-        with open(filename, 'wb') as f:
+        with open(self.filename, 'wb') as f:
            numpy.savez(f, observations = self.observations, actions = self.actions) 
 
 
 class GameWhisperer:
 
-    def __init__(self, fast_mode, create_dataset):
+    def __init__(self, fast_mode, create_dataset, filename):
         self.a_yx = [-1, -1]
         self.walkable_glyphs = [(33, -1), (34, -1), (35, 7), (35, 15), (36, -1), (37, -1), (40, -1), (41, -1), (42, -1),
                                 (46, -1),
@@ -91,7 +95,7 @@ class GameWhisperer:
         self.hard_search_num = 0
         self.elbereth_violated = 0
         self.depth_turns = {}
-        if create_dataset: self.saver = Saver()
+        if create_dataset: self.saver = Saver(filename)
         # if not self.fast_mode:
         # env.render()
 
@@ -1644,7 +1648,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
         if rew == 1:
             success += 1
 
-    if game.saver: game.saver.save_to_file('prova.npy')
+    if game.saver: game.saver.save_to_file()
 
 def go_back(num_lines):
     print("\033[%dA" % num_lines)
