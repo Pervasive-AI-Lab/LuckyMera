@@ -14,11 +14,8 @@ class TrainingAlgorithm(ABC):
         self.params = params
         self.env_name = env_name
         self.checkpoint = checkpoint
-        #self.env = gym.make(self.env_name, observation_keys=('glyphs', 'chars', 'colors'), )
-        self.env = gym.make(self.env_name)
+        self.env = gym.make(self.env_name, observation_keys=('chars', 'colors'), )
         print(f'\n\n\n\nobs_space type: {type(self.env.observation_space)}\n\n\n')
-
-        self.model = self.create_model(self.env)
 
     @abstractmethod
     def create_model(self): pass
@@ -53,12 +50,12 @@ class BehavioralCloning(TrainingAlgorithm):
     def __init__(self, params, env_name, dataset, batch_size, checkpoint):
         super().__init__(params, env_name, checkpoint)
 
-        #self.env = FlattenObservation(self.env)
+        self.env = FlattenObservation(self.env)
         self.train_loader, self.test_loader = self.create_dataloaders(dataset, batch_size)
-        print(f'\n\n\n\nobs_space type: {type(self.env.observation_space)}\n\n\n')
+        self.model = self.create_model(self.env)
 
     def create_model(self, env):
-        return A2C('MultiInputPolicy', env, verbose=1)
+        return A2C('MlpPolicy', env, verbose=1)
     
     def create_dataloaders(self, dataset, batch_size):
         observations = np.load(dataset)['observations']
@@ -102,26 +99,16 @@ class BehavioralCloning(TrainingAlgorithm):
         for batch_idx, (source, target) in enumerate(train_loader):
             source, target = source.to(device), target.to(device)
             optimizer.zero_grad()
-
-            '''
-            if isinstance(env.action_space, gym.spaces.Box):
-                if isinstance(student, (A2C, PPO)):
-                    action, _, _ = model(data)
-                else:
-                    action = model(data)
-                action_prediction = action.double()
-            else:
-                dist = model.get_distribution(data)
-                action_prediction = dist.distribution.logits
-                target = target.long()
-            '''
-
-            #action, _ = model.predict(source)
-            action, _, _ = model(source) 
+            
+            dist = model.get_distribution(source)
+            action = dist.distribution.logits
+            target = target.long()
 
             loss = loss_fn(action, target)
             loss.backward()
             optimizer.step()
+            
+            '''
             if batch_idx % log_interval == 0:
                 print(
                     "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
@@ -130,30 +117,23 @@ class BehavioralCloning(TrainingAlgorithm):
                         len(train_loader.dataset),
                         100.0 * batch_idx / len(train_loader),
                         loss.item(), ))
+            '''
         loss /= len(train_loader)
-        print(f"Test set: Average loss: {loss}")
+        print(f"Train set: Average loss: {loss}")
 
     def test_step(self, model, device, test_loader, loss_fn):
+        model = self.model.policy.to(device)
         model.eval()
         test_loss = 0
+
         with torch.no_grad():
             for source, target in test_loader:
                 source, target = source.to(device), target.to(device)
 
-                '''
-                if isinstance(env.action_space, gym.spaces.Box):
-                    if isinstance(student, (A2C, PPO)):
-                        action, _, _ = model(data)
-                    else:
-                        action = model(data)
-                    action_prediction = action.double()
-                else:
-                    dist = model.get_distribution(data)
-                    action_prediction = dist.distribution.logits
-                    target = target.long()
-                '''
+                dist = model.get_distribution(source)
+                action = dist.distribution.logits
+                target = target.long()
 
-                action, _= model.predict(source)
                 test_loss = loss_fn(action, target)
 
         test_loss /= len(test_loader.dataset)
