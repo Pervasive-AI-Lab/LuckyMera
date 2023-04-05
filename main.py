@@ -9,7 +9,7 @@ import general_modules
 import reach_modules
 import secret_passage_modules
 from core import GameWhisperer, DungeonWalker, main_logic
-
+from training import BehavioralCloning
 
 def start_bot(create_dataset, filename):
     with open('config.json', 'r') as f:
@@ -120,12 +120,45 @@ def main():
         type=str,
         help='The path where to save trajectories' 
     )
+    parser.add_argument(
+        '--training',
+        dest='training',
+        action='store_true',
+        help='Train a neural model'
+    )
+    parser.add_argument(
+        '--inference',
+        dest='training',
+        action='store_false',
+        help='Use the framework to actually play the game'
+    )
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
     filename = flags.filename
+    training = flags.training
+
+    env_name = 'MiniHack-Room-5x5-v0'
+    dataset = 'dataset'
+    batch_size = 32
+    checkpoint = 'saved_model'
+
+    params = {}
+    params['no_cuda'] = True
+    params['seed'] = 42
+    params['learning_rate'] = 1e-5
+    params['scheduler_gamma'] = 0.7
+    params['epochs'] = 1
+
+    print(f'training mode: {training}')
     
-    dungeon_walker, game, logic, task_map, attempts = start_bot(create_dataset, filename)
-    main_logic(dungeon_walker, game, logic, task_map, attempts)
+    if training:
+        global training_alg
+        training_alg = BehavioralCloning(params, env_name, dataset, batch_size, checkpoint)
+
+        training_alg.train()
+    else:
+        dungeon_walker, game, logic, task_map, attempts = start_bot(create_dataset, filename)
+        main_logic(dungeon_walker, game, logic, task_map, attempts)
 
 if __name__ == "__main__":
     main()

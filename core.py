@@ -96,6 +96,7 @@ class GameWhisperer:
         self.elbereth_violated = 0
         self.depth_turns = {}
         if create_dataset: self.saver = Saver(filename)
+        else: self.saver = None
         # if not self.fast_mode:
         # env.render()
 
