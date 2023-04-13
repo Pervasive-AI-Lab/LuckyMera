@@ -121,33 +121,90 @@ def main():
         help='The path where to save trajectories' 
     )
     parser.add_argument(
+    '--inference',
+    dest='training',
+    action='store_false',
+    help='Use the framework to actually play the game'
+    )
+
+    # training parameters
+    parser.add_argument(
         '--training',
         dest='training',
         action='store_true',
         help='Train a neural model'
     )
     parser.add_argument(
-        '--inference',
-        dest='training',
-        action='store_false',
-        help='Use the framework to actually play the game'
+        '--dataset',
+        type=str,
+        default='trajectories',
+        help='Path to the dataset for the training process'
     )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=32,
+        help='Size of the batch in the training process'
+    )
+    parser.add_argument(
+        '--checkpoint',
+        type=str,
+        default='saved_model',
+        help='Path to save the trained model'
+    )
+    parser.add_argument(
+        '--cuda',
+        dest='cuda',
+        action='store_true',
+        help='Use cuda for training'
+    )
+    parser.add_argument(
+        '--no_cuda',
+        dest='cuda',
+        action='store_false',
+        help='Do not use cuda for training'
+    )
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=42,
+        help='Random seed'
+    )
+    parser.add_argument(
+        '--learning_rate',
+        type=float,
+        default=1e-5,
+        help='Learning rate of the training process'
+    )
+    parser.add_argument(
+        '--scheduler_gamma',
+        type=float,
+        default=0.7,
+        help='The gamma parameter of the scheduler of the training process'
+    )
+    parser.add_argument(
+        '--epochs',
+        type=int,
+        default=5,
+        help='Number of epochs'
+    )
+
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
     filename = flags.filename
     training = flags.training
+    dataset = flags.dataset
+    batch_size = flags.batch_size
+    checkpoint = flags.checkpoint
 
-    env_name = 'MiniHack-Room-5x5-v0'
-    dataset = 'dataset'
-    batch_size = 32
-    checkpoint = 'saved_model'
+    env_name = 'NetHackChallenge-v0'
 
     params = {}
-    params['no_cuda'] = True
-    params['seed'] = 42
-    params['learning_rate'] = 1e-5
-    params['scheduler_gamma'] = 0.7
-    params['epochs'] = 1
+    params['use_cuda'] = flags.cuda
+    params['seed'] = flags.seed
+    params['learning_rate'] = flags.learning_rate
+    params['scheduler_gamma'] = flags.scheduler_gamma
+    params['epochs'] = flags.epochs
 
     print(f'training mode: {training}')
     
@@ -157,6 +214,8 @@ def main():
 
         training_alg.train()
     else:
+        if create_dataset and not filename:
+            sys.exit('no filename to store trajectories')
         dungeon_walker, game, logic, task_map, attempts = start_bot(create_dataset, filename)
         main_logic(dungeon_walker, game, logic, task_map, attempts)
 

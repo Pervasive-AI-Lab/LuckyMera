@@ -15,7 +15,6 @@ class TrainingAlgorithm(ABC):
         self.env_name = env_name
         self.checkpoint = checkpoint
         self.env = gym.make(self.env_name, observation_keys=('chars', 'colors'), )
-        print(f'\n\n\n\nobs_space type: {type(self.env.observation_space)}\n\n\n')
 
     @abstractmethod
     def create_model(self): pass
@@ -72,7 +71,7 @@ class BehavioralCloning(TrainingAlgorithm):
         return train_loader, test_loader
 
     def train(self):
-        use_cuda = not self.params['no_cuda'] and torch.cuda.is_available()
+        use_cuda = self.params['use_cuda'] and torch.cuda.is_available()
         torch.manual_seed(self.params['seed'])
         device = torch.device("cuda" if use_cuda else "cpu")
 

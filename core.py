@@ -49,7 +49,8 @@ class GameWhisperer:
         self.color_obs = self.current_obs.__getitem__("colors")
         self.message = self.current_obs.__getitem__("message")
         self.parsed_message = self.parse_message()
-        self.all_obs = self.current_obs.__getitem__("tty_chars")
+        if 'tty_chars' in self.current_obs.keys():
+            self.all_obs = self.current_obs.__getitem__("tty_chars")
         self.bl_stats = self.current_obs.__getitem__("blstats")
         self.memory = [[-1 for _ in range(self.size_x)] for _ in range(self.size_y)]
         self.exception = []
@@ -152,8 +153,8 @@ class GameWhisperer:
         self.message = self.current_obs.__getitem__("message")
         self.parsed_message = self.parse_message()
         self.bl_stats = self.current_obs.__getitem__("blstats")
-        self.all_obs = self.current_obs.__getitem__("tty_chars")
-
+        if 'tty_chars' in self.current_obs.keys():
+            self.all_obs = self.current_obs.__getitem__("tty_chars")
         if self.last_risk_update != self.bl_stats[20]:
             self.update_riskmap()
             self.last_risk_update = self.bl_stats[20]
