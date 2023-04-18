@@ -1,7 +1,25 @@
 from archetype_modules import Task
 import random
+import numpy as np
 
 from minihack.agent.polybeast.evaluate import load_model, get_action
+from stable_baselines3 import A2C
+
+class BCWalk(Task):
+    def __init__(self, dungeon_walker, game, task_name):
+        super().__init__(dungeon_walker, game, task_name)
+        self.model = A2C.load('bc_model.zip')
+        
+    #behavioral cloning agent can be always used
+    def planning(self, stats, safe_play, agent):
+        return self.name, None, None
+
+    def execution(self, path, arg1, agent, stats):
+        #format the obs as in training
+        a2c_obs =  np.concatenate((self.game.current_obs['chars'].flatten(), self.game.current_obs['colors'].flatten()), axis=None)
+        action, _ = self.model.predict(a2c_obs)
+        rew, done, info = self.game.do_it(action, None)
+        return rew, done, info
 
 class NeuralWalk(Task):
     def __init__(self, dungeon_walker, game, task_name):

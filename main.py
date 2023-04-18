@@ -188,6 +188,8 @@ def main():
         default=5,
         help='Number of epochs'
     )
+    parser.set_defaults(training=False)
+
 
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
@@ -209,7 +211,6 @@ def main():
     print(f'training mode: {training}')
     
     if training:
-        global training_alg
         training_alg = BehavioralCloning(params, env_name, dataset, batch_size, checkpoint)
 
         training_alg.train()
