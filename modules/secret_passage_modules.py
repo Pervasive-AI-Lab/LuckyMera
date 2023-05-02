@@ -1,4 +1,4 @@
-from archetype_modules import HiddenTask
+from modules.archetype_modules import HiddenTask
 
 
 class HiddenRoom(HiddenTask):

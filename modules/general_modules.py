@@ -1,4 +1,4 @@
-from archetype_modules import Task
+from modules.archetype_modules import Task
 import random
 import numpy as np
 

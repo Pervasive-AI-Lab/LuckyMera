@@ -10,11 +10,10 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 
 class TrainingAlgorithm(ABC):
-    def __init__(self, params, env_name, checkpoint):
+    def __init__(self, params, env, checkpoint):
         self.params = params
-        self.env_name = env_name
         self.checkpoint = checkpoint
-        self.env = gym.make(self.env_name, observation_keys=('chars', 'colors'), )
+        self.env = env
 
     @abstractmethod
     def create_model(self): pass
@@ -74,6 +73,7 @@ class BehavioralCloning(TrainingAlgorithm):
         use_cuda = self.params['use_cuda'] and torch.cuda.is_available()
         torch.manual_seed(self.params['seed'])
         device = torch.device("cuda" if use_cuda else "cpu")
+        print(f'device for training: {device}')
 
         #policy = self.model.policy.to(device)
 

@@ -9,8 +9,6 @@ import numpy
 
 numpy.set_printoptions(threshold=sys.maxsize)
 
-env = gym.make('NetHackChallenge-v0')
-
 # utility class to save trajectories
 # we use chars and colors from each observation
 # each item is <chars + colors, action>
@@ -34,7 +32,8 @@ class Saver:
 
 class GameWhisperer:
 
-    def __init__(self, fast_mode, create_dataset, filename):
+    def __init__(self, env, fast_mode, create_dataset, filename):
+        self.env = env
         self.a_yx = [-1, -1]
         self.walkable_glyphs = [(33, -1), (34, -1), (35, 7), (35, 15), (36, -1), (37, -1), (40, -1), (41, -1), (42, -1),
                                 (46, -1),
@@ -43,7 +42,7 @@ class GameWhisperer:
                                 (96, -1), (100, 15), (100, 7), (102, 15), (102, 7), (117, -1), (124, 3)]
         self.size_y = 21
         self.size_x = 79
-        self.current_obs = env.reset()
+        self.current_obs = self.env.reset()
         self.glyph_obs = self.current_obs.__getitem__("glyphs")
         self.char_obs = self.current_obs.__getitem__("chars")
         self.color_obs = self.current_obs.__getitem__("colors")
@@ -766,7 +765,7 @@ class GameWhisperer:
         """
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(7)
+            self.current_obs, rew, done, info = self.env.step(7)
         self.update_obs()
 
     def no(self):
@@ -777,7 +776,7 @@ class GameWhisperer:
         """
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(5)
+            self.current_obs, rew, done, info = self.env.step(5)
         self.update_obs()
 
     def more(self):
@@ -787,7 +786,7 @@ class GameWhisperer:
         """
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(19)
+            self.current_obs, rew, done, info = self.env.step(19)
         self.update_obs()
 
     #new version, not working
@@ -988,7 +987,7 @@ class GameWhisperer:
                     self.shop_tiles.append(tile)
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(38)
+            self.current_obs, rew, done, info = self.env.step(38)
             self.update_obs()
 
             if self.parsed_message.__contains__("Closed for inventory"):
@@ -1005,18 +1004,18 @@ class GameWhisperer:
             return -1, True, None
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(38)
+            self.current_obs, rew, done, info = self.env.step(38)
         self.update_obs()
 
         if self.update_agent():
-            self.current_obs, rew, done, info = env.step(x)
+            self.current_obs, rew, done, info = self.env.step(x)
         self.update_obs()
 
         if self.parsed_message.__contains__("swap"):
             self.pet_alive = True
             self.pet_alive_turn = self.bl_stats[20]
         if direction is not None and self.parsed_message.__contains__("In what direction?"):
-            self.current_obs, rew, done, info = env.step(direction)
+            self.current_obs, rew, done, info = self.env.step(direction)
             self.update_obs()
 
         if self.parsed_message.__contains__("Are you sure you want to pray?") or self.parsed_message.__contains__(
@@ -1027,7 +1026,7 @@ class GameWhisperer:
             self.exception.append(next_tile)
             self.update_obs()
         if self.parsed_message.__contains__("What do you want to write with?"):
-            self.current_obs, rew, done, info = env.step(106)  # -
+            self.current_obs, rew, done, info = self.env.step(106)  # -
             self.update_obs()
         if self.parsed_message.__contains__("Do you want to add to the current engraving?"):
             self.no()
@@ -1036,14 +1035,14 @@ class GameWhisperer:
         if self.parsed_message.__contains__("You write in the dust with your fingertip."):
             self.more()
         if self.parsed_message.__contains__("What do you want to write in the dust here?"):
-            self.current_obs, rew, done, info = env.step(36)  # E
-            self.current_obs, rew, done, info = env.step(1)  # l
-            self.current_obs, rew, done, info = env.step(6)  # b
-            self.current_obs, rew, done, info = env.step(35)  # e
-            self.current_obs, rew, done, info = env.step(67)  # r
-            self.current_obs, rew, done, info = env.step(35)  # e
-            self.current_obs, rew, done, info = env.step(91)  # t
-            self.current_obs, rew, done, info = env.step(3)  # h
+            self.current_obs, rew, done, info = self.env.step(36)  # E
+            self.current_obs, rew, done, info = self.env.step(1)  # l
+            self.current_obs, rew, done, info = self.env.step(6)  # b
+            self.current_obs, rew, done, info = self.env.step(35)  # e
+            self.current_obs, rew, done, info = self.env.step(67)  # r
+            self.current_obs, rew, done, info = self.env.step(35)  # e
+            self.current_obs, rew, done, info = self.env.step(91)  # t
+            self.current_obs, rew, done, info = self.env.step(3)  # h
             self.more()
             self.update_obs()
 
@@ -1077,7 +1076,7 @@ class GameWhisperer:
                     self.search_map[next_tile[0]][next_tile[1]] = 1
         if not self.fast_mode:  # and x != 10:
             # go_back(27)
-            env.render()
+            self.env.render()
             # time.sleep(0.05)
         if self.saver:
             self.saver.save_obs_and_action(self.current_obs, x)
@@ -1179,7 +1178,7 @@ class GameWhisperer:
             :return: //
         """
 
-        self.current_obs = env.reset()
+        self.current_obs = self.env.reset()
         self.new_turn = 0
         self.elbereth_violated = 0
         self.old_turn = 0
@@ -1191,7 +1190,7 @@ class GameWhisperer:
         self.agent_id = self.glyph_obs[self.a_yx[0]][self.a_yx[1]]
         self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
         if not self.fast_mode:
-            env.render()
+            self.env.render()
         self.engraved_tiles = []
         self.inedible = []
         self.shop_tiles = []
@@ -1567,7 +1566,7 @@ def planning(game, tasks_prio, task_map):
 
 
 # metodo che esegue le task pianificata
-def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
+def main_logic(env, dungeon_walker, game, tasks_prio, task_map, attempts):
     """
         function that plan the best task to perform, according to the in-game state of the agent
         and the tasks priority establied by the user in agent's configuration

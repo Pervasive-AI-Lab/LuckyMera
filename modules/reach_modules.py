@@ -1,4 +1,4 @@
-from archetype_modules import ReachTask
+from modules.archetype_modules import ReachTask
 
 
 class Gold(ReachTask):

@@ -2,16 +2,12 @@ import sys
 import json
 import time
 import argparse
-#from secret_passage_modules import HiddenRoom, HiddenCorridor
-#from reach_modules import Gold, Unseen, Horizon
-#from general_modules import Pray, Elbereth, Run, Break, Fight, Eat, StairsDescent, StairsAscent, ExploreClosest, RandomWalk
-import general_modules
-import reach_modules
-import secret_passage_modules
+import gym
+from modules import general_modules, reach_modules, secret_passage_modules
 from core import GameWhisperer, DungeonWalker, main_logic
-from training import BehavioralCloning
+import training
 
-def start_bot(create_dataset, filename):
+def start_bot(env, create_dataset, filename):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -38,7 +34,7 @@ def start_bot(create_dataset, filename):
         games_number = 100
     time.sleep(0.5)
 
-    game_interface = GameWhisperer(mode, create_dataset, filename)
+    game_interface = GameWhisperer(env, mode, create_dataset, filename)
     walk_logic = DungeonWalker(game_interface)
 
     task_prio = config['task_prio_list']
@@ -109,6 +105,22 @@ def start_bot(create_dataset, filename):
 
 def main():
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+    '--inference',
+    dest='training',
+    action='store_false',
+    help='Use the framework to actually play the game'
+    )
+    parser.add_argument(
+        '--observation_keys',
+        dest='observation_keys',
+        nargs='+',
+        default=None,
+        help='Specify the observation space of nle'
+    )
+    
+    #### DATASET CREATION PARAMETERS ####
     parser.add_argument(
         '--create_dataset',
         dest='create_dataset',
@@ -120,19 +132,19 @@ def main():
         type=str,
         help='The path where to save trajectories' 
     )
-    parser.add_argument(
-    '--inference',
-    dest='training',
-    action='store_false',
-    help='Use the framework to actually play the game'
-    )
 
-    # training parameters
+    #### TRAINING PARAMETERS ####
     parser.add_argument(
         '--training',
         dest='training',
         action='store_true',
         help='Train a neural model'
+    )
+    parser.add_argument(
+        '--training_alg',
+        type=str,
+        default='',
+        help='One of the training algorithm implemented to use'
     )
     parser.add_argument(
         '--dataset',
@@ -194,12 +206,12 @@ def main():
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
     filename = flags.filename
-    training = flags.training
+    training_mode = flags.training
+    training_alg_name = flags.training_alg
     dataset = flags.dataset
     batch_size = flags.batch_size
     checkpoint = flags.checkpoint
-
-    env_name = 'NetHackChallenge-v0'
+    observation_keys = flags.observation_keys
 
     params = {}
     params['use_cuda'] = flags.cuda
@@ -209,16 +221,28 @@ def main():
     params['epochs'] = flags.epochs
 
     print(f'training mode: {training}')
-    
-    if training:
-        training_alg = BehavioralCloning(params, env_name, dataset, batch_size, checkpoint)
+    print(f'obs_keys: {observation_keys}')
 
+    env_name = 'NetHackChallenge-v0'
+    if observation_keys:
+        env = gym.make(env_name, observation_keys=observation_keys)
+    #if no observation_keys is specified, all the keys are included
+    else: env = gym.make(env_name)
+    
+    if training_mode:
+        if hasattr(training, training_alg_name):
+            training_alg_class = getattr(training, training_alg_name)
+            print(f'Using {training_alg_name} for training')
+        else:
+            sys.exit(f'The training algorithm {training_alg_name} is not implemented in training.py')
+
+        training_alg = training_alg_class(params, env, dataset, batch_size, checkpoint)
         training_alg.train()
     else:
         if create_dataset and not filename:
             sys.exit('no filename to store trajectories')
-        dungeon_walker, game, logic, task_map, attempts = start_bot(create_dataset, filename)
-        main_logic(dungeon_walker, game, logic, task_map, attempts)
+        dungeon_walker, game, logic, task_map, attempts = start_bot(env, create_dataset, filename)
+        main_logic(env, dungeon_walker, game, logic, task_map, attempts)
 
 if __name__ == "__main__":
     main()
