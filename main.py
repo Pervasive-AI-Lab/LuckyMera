@@ -268,7 +268,7 @@ def main():
         if create_dataset and not keys_to_save:
             raise SystemError('keys_to_save equal to None - No keys to save')
         
-        if language_mode: env = NLELanguageWrapper(env)
+        if language_mode: env = NLELanguageWrapper(env, use_language_action=False)
         if create_dataset: saver = Saver(keys_to_save, filename)
         else: saver = None
 
