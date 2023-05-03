@@ -1,38 +1,36 @@
 import math
+import time
+import sys
+import numpy as np
+from collections import defaultdict
+from queue import PriorityQueue
+import pickle
+
 import gym
 import minihack
 from nle import nethack
-from queue import PriorityQueue
-import time
-import sys
-import numpy
 
-numpy.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=sys.maxsize)
 
-# utility class to save trajectories
-# we use chars and colors from each observation
-# each item is <chars + colors, action>
 class Saver:
-    def __init__(self, filename):
-        self.observations = []
-        self.actions = []
+    def __init__(self, obs_keys, filename):
+        self.trajectory = defaultdict(list)
         self.filename = filename
+        self.obs_keys = obs_keys
 
     def save_obs_and_action(self, observation, action):
-        self.observations.append(numpy.concatenate((observation['chars'].flatten(), observation['colors'].flatten()), axis=None))
-        self.actions.append(action)
+        for k in self.obs_keys:
+            self.trajectory[k].append(observation[k])
+        self.trajectory['actions'].append(action)
 
     def save_to_file(self):
-        self.observations = numpy.array(self.observations) 
-        self.actions = numpy.array(self.actions)
-
-        with open(self.filename, 'wb') as f:
-           numpy.savez(f, observations = self.observations, actions = self.actions) 
+        with open(self.filename+'.pkl', 'wb') as fp:
+            pickle.dump(self.trajectory, fp)
 
 
 class GameWhisperer:
 
-    def __init__(self, env, fast_mode, create_dataset, filename):
+    def __init__(self, env, fast_mode, saver, filename):
         self.env = env
         self.a_yx = [-1, -1]
         self.walkable_glyphs = [(33, -1), (34, -1), (35, 7), (35, 15), (36, -1), (37, -1), (40, -1), (41, -1), (42, -1),
@@ -43,14 +41,14 @@ class GameWhisperer:
         self.size_y = 21
         self.size_x = 79
         self.current_obs = self.env.reset()
-        self.glyph_obs = self.current_obs.__getitem__("glyphs")
-        self.char_obs = self.current_obs.__getitem__("chars")
-        self.color_obs = self.current_obs.__getitem__("colors")
-        self.message = self.current_obs.__getitem__("message")
+        self.glyph_obs = self.current_obs['glyphs']
+        self.char_obs = self.current_obs['chars']
+        self.color_obs = self.current_obs['colors']
+        self.message = self.current_obs['message']
         self.parsed_message = self.parse_message()
         if 'tty_chars' in self.current_obs.keys():
-            self.all_obs = self.current_obs.__getitem__("tty_chars")
-        self.bl_stats = self.current_obs.__getitem__("blstats")
+            self.all_obs = self.current_obs['tty_chars']
+        self.bl_stats = self.current_obs['blstats']
         self.memory = [[-1 for _ in range(self.size_x)] for _ in range(self.size_y)]
         self.exception = []
         self.search_map = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
@@ -95,8 +93,7 @@ class GameWhisperer:
         self.hard_search_num = 0
         self.elbereth_violated = 0
         self.depth_turns = {}
-        if create_dataset: self.saver = Saver(filename)
-        else: self.saver = None
+        self.saver = saver
         # if not self.fast_mode:
         # env.render()
 
@@ -146,14 +143,14 @@ class GameWhisperer:
             function that update every possible version of the observation space
         """
 
-        self.glyph_obs = self.current_obs.__getitem__("glyphs")
-        self.char_obs = self.current_obs.__getitem__("chars")
-        self.color_obs = self.current_obs.__getitem__("colors")
-        self.message = self.current_obs.__getitem__("message")
+        self.glyph_obs = self.current_obs['glyphs']
+        self.char_obs = self.current_obs['chars']
+        self.color_obs = self.current_obs['colors']
+        self.message = self.current_obs['message']
         self.parsed_message = self.parse_message()
-        self.bl_stats = self.current_obs.__getitem__("blstats")
+        self.bl_stats = self.current_obs['blstats']
         if 'tty_chars' in self.current_obs.keys():
-            self.all_obs = self.current_obs.__getitem__("tty_chars")
+            self.all_obs = self.current_obs['tty_chars']
         if self.last_risk_update != self.bl_stats[20]:
             self.update_riskmap()
             self.last_risk_update = self.bl_stats[20]
@@ -944,7 +941,6 @@ class GameWhisperer:
 
         return rew, done, info
     """
-
     #old version, working
     def do_it(self, x, direction):
         """
@@ -1566,7 +1562,7 @@ def planning(game, tasks_prio, task_map):
 
 
 # metodo che esegue le task pianificata
-def main_logic(env, dungeon_walker, game, tasks_prio, task_map, attempts):
+def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
     """
         function that plan the best task to perform, according to the in-game state of the agent
         and the tasks priority establied by the user in agent's configuration

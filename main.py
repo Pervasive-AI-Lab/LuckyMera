@@ -4,10 +4,11 @@ import time
 import argparse
 import gym
 from modules import general_modules, reach_modules, secret_passage_modules
-from core import GameWhisperer, DungeonWalker, main_logic
+from core import Saver, GameWhisperer, DungeonWalker, main_logic
 import training
+from nle_language_wrapper import NLELanguageWrapper
 
-def start_bot(env, create_dataset, filename):
+def start_bot(env, saver, filename):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -34,7 +35,7 @@ def start_bot(env, create_dataset, filename):
         games_number = 100
     time.sleep(0.5)
 
-    game_interface = GameWhisperer(env, mode, create_dataset, filename)
+    game_interface = GameWhisperer(env, mode, saver, filename)
     walk_logic = DungeonWalker(game_interface)
 
     task_prio = config['task_prio_list']
@@ -121,80 +122,97 @@ def main():
     )
     
     #### DATASET CREATION PARAMETERS ####
-    parser.add_argument(
+    dataset_creation_group = parser.add_argument_group('dataset creation')
+    dataset_creation_group.add_argument(
         '--create_dataset',
         dest='create_dataset',
         action='store_true',
         help='Use the bot to generate a dataset of trajectories'
     )
-    parser.add_argument(
+    dataset_creation_group.add_argument(
+        '--language_mode',
+        dest='language_mode',
+        action='store_true',
+        help='Save trajectories in language mode, using the nle_language_wrapper'
+    )
+    dataset_creation_group.add_argument(
+        '--keys_to_save',
+        dest='keys_to_save',
+        nargs='+',
+        default=None,
+        help='Specify the observation keys to save'
+    )
+    dataset_creation_group.add_argument(
         '--filename',
         type=str,
+        default='saved_trajectories',
         help='The path where to save trajectories' 
     )
 
     #### TRAINING PARAMETERS ####
-    parser.add_argument(
+    training_group = parser.add_argument_group('training mode')
+    training_group.add_argument(
         '--training',
         dest='training',
         action='store_true',
         help='Train a neural model'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--training_alg',
         type=str,
-        default='',
-        help='One of the training algorithm implemented to use'
+        default=None,
+        help='Select the training algorithm to use'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--dataset',
         type=str,
-        default='trajectories',
+        default='saved_trajectories.pkl',
         help='Path to the dataset for the training process'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--batch_size',
         type=int,
         default=32,
         help='Size of the batch in the training process'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--checkpoint',
         type=str,
         default='saved_model',
         help='Path to save the trained model'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--cuda',
         dest='cuda',
         action='store_true',
         help='Use cuda for training'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--no_cuda',
         dest='cuda',
         action='store_false',
         help='Do not use cuda for training'
     )
-    parser.add_argument(
+    parser.set_defaults(cuda=True)
+    training_group.add_argument(
         '--seed',
         type=int,
         default=42,
         help='Random seed'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--learning_rate',
         type=float,
         default=1e-5,
         help='Learning rate of the training process'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--scheduler_gamma',
         type=float,
         default=0.7,
         help='The gamma parameter of the scheduler of the training process'
     )
-    parser.add_argument(
+    training_group.add_argument(
         '--epochs',
         type=int,
         default=5,
@@ -205,6 +223,8 @@ def main():
 
     flags = parser.parse_args()
     create_dataset = flags.create_dataset
+    language_mode = flags.language_mode
+    keys_to_save = flags.keys_to_save
     filename = flags.filename
     training_mode = flags.training
     training_alg_name = flags.training_alg
@@ -213,36 +233,47 @@ def main():
     checkpoint = flags.checkpoint
     observation_keys = flags.observation_keys
 
-    params = {}
-    params['use_cuda'] = flags.cuda
-    params['seed'] = flags.seed
-    params['learning_rate'] = flags.learning_rate
-    params['scheduler_gamma'] = flags.scheduler_gamma
-    params['epochs'] = flags.epochs
+    training_params = {}
+    training_params['use_cuda'] = flags.cuda
+    training_params['seed'] = flags.seed
+    training_params['learning_rate'] = flags.learning_rate
+    training_params['scheduler_gamma'] = flags.scheduler_gamma
+    training_params['epochs'] = flags.epochs
 
-    print(f'training mode: {training}')
+    print(f'training mode: {training_mode}')
     print(f'obs_keys: {observation_keys}')
 
     env_name = 'NetHackChallenge-v0'
     if observation_keys:
         env = gym.make(env_name, observation_keys=observation_keys)
-    #if no observation_keys is specified, all the keys are included
+    #if no observation_keys are specified, all the keys are included
     else: env = gym.make(env_name)
     
     if training_mode:
+        if not training_alg_name:
+            raise SystemError('No training algorithm specified')
         if hasattr(training, training_alg_name):
             training_alg_class = getattr(training, training_alg_name)
             print(f'Using {training_alg_name} for training')
         else:
-            sys.exit(f'The training algorithm {training_alg_name} is not implemented in training.py')
+            raise SystemError(f'The training algorithm {training_alg_name} is not implemented in training.py')
 
-        training_alg = training_alg_class(params, env, dataset, batch_size, checkpoint)
+        training_alg = training_alg_class(training_params, env, dataset, batch_size, checkpoint)
         training_alg.train()
     else:
         if create_dataset and not filename:
-            sys.exit('no filename to store trajectories')
-        dungeon_walker, game, logic, task_map, attempts = start_bot(env, create_dataset, filename)
-        main_logic(env, dungeon_walker, game, logic, task_map, attempts)
+            raise SystemError('no filename to store trajectories')
+        if language_mode and not create_dataset:
+            raise SystemError('language mode selected, but create_dataset is false')
+        if create_dataset and not keys_to_save:
+            raise SystemError('keys_to_save equal to None - No keys to save')
+        
+        if language_mode: env = NLELanguageWrapper(env)
+        if create_dataset: saver = Saver(keys_to_save, filename)
+        else: saver = None
+
+        dungeon_walker, game, logic, task_map, attempts = start_bot(env, saver, filename)
+        main_logic(dungeon_walker, game, logic, task_map, attempts)
 
 if __name__ == "__main__":
     main()

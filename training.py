@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import pickle
 import gym
 from gym.wrappers import FlattenObservation
 from stable_baselines3 import A2C
@@ -39,7 +40,8 @@ class Trajectory(Dataset):
         self.actions = expert_actions
 
     def __getitem__(self, index):
-        return self.observations[index], self.actions[index]
+        obs = np.concatenate((self.observations['chars'][index].flatten(), self.observations['colors'][index].flatten()), axis=None)
+        return obs, self.actions[index]
 
     def __len__(self):
         return len(self.observations)
@@ -56,8 +58,9 @@ class BehavioralCloning(TrainingAlgorithm):
         return A2C('MlpPolicy', env, verbose=1)
     
     def create_dataloaders(self, dataset, batch_size):
-        observations = np.load(dataset)['observations']
-        actions = np.load(dataset)['actions']
+        with open(dataset, 'rb') as fp:
+            observations = pickle.load(fp)
+        actions = observations.pop('actions')
 
         dataset = Trajectory(observations, actions)
         train_size = int(0.8 * len(dataset))
