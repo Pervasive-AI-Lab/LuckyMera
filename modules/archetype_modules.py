@@ -1,11 +1,11 @@
-# archetipo per ogni possibile tipo di task
-class Task:
-    def __init__(self, dungeon_walker, game, task_name):
+# abstract class for every possible type of skill
+class Skill:
+    def __init__(self, dungeon_walker, game, skill_name):
         self.dungeon_walker = dungeon_walker
         self.game = game
-        self.name = task_name
+        self.name = skill_name
 
-    # condizione per interrompere con emergenza ciò che si sta facendo
+    # condition to interrupt currect actions in case of emergency
     def eject_button(self):
         """
             function that controls whether the agent should quickly flee from the current plan
@@ -55,7 +55,7 @@ class Task:
                 return True
         return False
 
-    # metodo per l'esecuzione di piani articolati
+    # method to execute articulate plans
     def do_plan(self, plan):
         """
             function that perform multiple actions according to a given plan
@@ -124,7 +124,7 @@ class Task:
         else:
             return False
 
-    # metodo ausiliario per la ricerca e il pathfinding verso un gruppo di obbiettivi generici
+    # auxiliary method for the seach and pathfinding towards a group of generic goal positions
     def standard_plan(self, glyphs, not_reach_diag, safe_play):
         """
             function for finding a path to a tile given a set of possible objective
@@ -165,17 +165,17 @@ class Task:
         return self.name
 
 
-# archetipo per task che prevedono il raggiungimento di un obbiettivo
-class ReachTask(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+# class for skills to reach a goal position
+class ReachSkill(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def execution(self, path, arg1, agent, stats):
         """
-            function for task's execution
+            function for skill's execution
 
             :param path: path to be followed
-            :param arg1: optional extra argument of task's execution (position of the target to be reached)
+            :param arg1: optional extra argument of skill's execution (position of the target to be reached)
             :param agent: actual agent position according to agent's knowledge
             :param stats: actual in-game character's stats according to agent's knowledge
             :return path to and position of a found tile
@@ -187,10 +187,10 @@ class ReachTask(Task):
         return rew, done, info
 
 
-# archetipo per task che prevedono la ricerca di percorsi nascosti
-class HiddenTask(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+# class for skills to search for hidden parts
+class HiddenSkill(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def condition_unsearched_obj(self, tile, args):
         """
@@ -214,7 +214,7 @@ class HiddenTask(Task):
                     return True
         return False
 
-    # metodo ausiliario per la ricerca e il pathfinding verso un obbiettivo in cui non è mai stata effettuata una search
+    # auxiliary methods for search and pathfinding towards a goal position never searched before
     def unsearched_plan(self, glyph, safe_play):
         """
             function for finding a path to a tile containing the given glyph according to the unsearched condition (previous  function)
@@ -231,10 +231,10 @@ class HiddenTask(Task):
 
     def execution(self, path, arg1, agent, stats):  # in search room corridor
         """
-            function for task's execution
+            function for skill's execution
 
             :param path: path to be followed
-            :param arg1: optional extra argument of task's execution (position of the target to be reached)
+            :param arg1: optional extra argument of skill's execution (position of the target to be reached)
             :param agent: actual agent position according to agent's knowledge
             :param stats: actual in-game character's stats according to agent's knowledge
             :return path to and position of a found tile

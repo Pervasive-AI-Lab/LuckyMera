@@ -1,18 +1,18 @@
-from modules.archetype_modules import HiddenTask
+from modules.archetype_modules import HiddenSkill
 
 
-class HiddenRoom(HiddenTask):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class HiddenRoom(HiddenSkill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -26,18 +26,18 @@ class HiddenRoom(HiddenTask):
             return "search_hidden", path, coords
 
 
-class HiddenCorridor(HiddenTask):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class HiddenCorridor(HiddenSkill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """

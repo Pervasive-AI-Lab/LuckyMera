@@ -1,13 +1,13 @@
-from modules.archetype_modules import Task
+from modules.archetype_modules import Skill
 import random
 import numpy as np
 
 from minihack.agent.polybeast.evaluate import load_model, get_action
 from stable_baselines3 import A2C
 
-class BCWalk(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class BCWalk(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
         self.model = A2C.load('bc_model.zip')
         
     #behavioral cloning agent can be always used
@@ -21,9 +21,9 @@ class BCWalk(Task):
         rew, done, info = self.game.do_it(action, None)
         return rew, done, info
 
-class NeuralWalk(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class NeuralWalk(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
         self.model, self.hidden = load_model('challenge', '/home/lquarantiello/minihack/minihack/agent/polybeast/outputs/Room-Ultimate-15x15_IMPALA_2e7')
 
     #using the rl model to walk is always possible
@@ -36,9 +36,9 @@ class NeuralWalk(Task):
         rew, done, info = self.game.do_it(action, None)
         return rew, done, info
 
-class RandomWalk(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class RandomWalk(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
         self.counter = 0
 
     #random walking is always applicable
@@ -55,18 +55,18 @@ class RandomWalk(Task):
         return rew, done, info
 
 
-class StairsDescent(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class StairsDescent(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-             function for task planning
+             function for skill planning
 
              :param safe_play: flag identifying the need for a safe play
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
-             :return name -> a string containing task name
+             :return name -> a string containing skill name
                      path -> a list containing the actions to be performed to reach a certain possible target
                      arg1 -> extra optional output (target's coordinates in this case)
          """
@@ -99,10 +99,10 @@ class StairsDescent(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -123,18 +123,18 @@ class StairsDescent(Task):
         return rew, done, info
 
 
-class StairsAscent(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class StairsAscent(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-             function for task planning
+             function for skill planning
 
              :param safe_play: flag identifying the need for a safe play
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
-             :return name -> a string containing task name
+             :return name -> a string containing skill name
                      path -> a list containing the actions to be performed to reach a certain possible target
                      arg1 -> extra optional output (target's coordinates in this case)
          """
@@ -154,10 +154,10 @@ class StairsAscent(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -178,18 +178,18 @@ class StairsAscent(Task):
         return rew, done, info
 
 
-class Pray(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Pray(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-             function for task planning
+             function for skill planning
 
              :param safe_play: flag identifying the need for a safe play
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
-             :return name -> a string containing task name
+             :return name -> a string containing skill name
                      path -> a list containing the actions to be performed to reach a certain possible target (None)
                      arg1 -> extra optional output (None)
          """
@@ -202,10 +202,10 @@ class Pray(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -221,18 +221,18 @@ class Pray(Task):
         return rew, done, info
 
 
-class Elbereth(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Elbereth(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-             function for task planning
+             function for skill planning
 
              :param safe_play: flag identifying the need for a safe play
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
-             :return name -> a string containing task name
+             :return name -> a string containing skill name
                      path -> a list containing the actions to be performed to reach a certain possible target (None)
                      arg1 -> extra optional output (None)
          """
@@ -252,10 +252,10 @@ class Elbereth(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -291,18 +291,18 @@ class Elbereth(Task):
         return rew, done, info
 
 
-class Run(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Run(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-             function for task planning
+             function for skill planning
 
              :param safe_play: flag identifying the need for a safe play
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
-             :return name -> a string containing task name
+             :return name -> a string containing skill name
                      path -> a list containing the actions to be performed to reach a certain possible target (None)
                      arg1 -> extra optional output (the best tile to run to in this case)
          """
@@ -352,10 +352,10 @@ class Run(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -380,10 +380,10 @@ class Run(Task):
         return rew, done, info
 
 
-class ExploreClosest(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        self.chosen_task = None
-        super().__init__(dungeon_walker, game, task_name)
+class ExploreClosest(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        self.chosen_skill = None
+        super().__init__(dungeon_walker, game, skill_name)
 
     # metodo ausiliario per la ricerca e il pathfinding verso la casella adiacente ad un gruppo di obbiettivi
     def mixed_plan(self, glyphs, condition, safe_play):
@@ -572,12 +572,12 @@ class ExploreClosest(Task):
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -590,27 +590,27 @@ class ExploreClosest(Task):
             char = self.game.get_char(coords[0], coords[1])
             color = self.game.get_color(coords[0], coords[1])
             if char == 43 and color == 3:
-                self.chosen_task = "reach_doorway_closed"
+                self.chosen_skill = "reach_doorway_closed"
                 return "reach_doorway_closed", path, coords
             elif char == 35:
-                self.chosen_task = "corridor_roam"
+                self.chosen_skill = "corridor_roam"
                 return "corridor_roam", path, coords
             else:
-                self.chosen_task = "reach_doorway_open"
+                self.chosen_skill = "reach_doorway_open"
                 return "reach_doorway_open", path, coords
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
          """
 
-        if self.chosen_task == "reach_doorway_open":
+        if self.chosen_skill == "reach_doorway_open":
             rew, done, info = self.do_plan(path)
             if rew == -1:
                 self.game.clear_memory(arg1[0], arg1[1])
@@ -631,7 +631,7 @@ class ExploreClosest(Task):
                 j += 1
             return rew, done, info
 
-        elif self.chosen_task == "reach_doorway_closed":
+        elif self.chosen_skill == "reach_doorway_closed":
             rew, done, info = self.do_plan(path)
             if self.game.get_parsed_message().__contains__(" no door"):
                 # self.game.append_exception((arg1[0], arg1[1]))
@@ -653,7 +653,7 @@ class ExploreClosest(Task):
                 self.game.clear_memory(arg1[0], arg1[1])
             return rew, done, info
 
-        elif self.chosen_task == "corridor_roam":
+        elif self.chosen_skill == "corridor_roam":
             rew, done, info = self.do_plan(path)
             if rew == -1:
                 self.game.clear_memory(arg1[0], arg1[1])
@@ -666,9 +666,9 @@ class ExploreClosest(Task):
             return rew, done, info
 
 
-class Fight(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Fight(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     @staticmethod
     def condition_close_obj(tile, args):
@@ -740,12 +740,12 @@ class Fight(Task):
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -758,10 +758,10 @@ class Fight(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -882,9 +882,9 @@ class Fight(Task):
         return rew, done, info
 
 
-class Eat(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Eat(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def fresh_food(self):
         """
@@ -914,12 +914,12 @@ class Eat(Task):
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -934,10 +934,10 @@ class Eat(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile
@@ -1014,18 +1014,18 @@ class Eat(Task):
         return None, None, None
 
 
-class Break(Task):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Break(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target (None)
                        arg1 -> extra optional output (None)
         """
@@ -1040,10 +1040,10 @@ class Break(Task):
 
     def execution(self, path, arg1, agent, stats):
         """
-             function for task execution
+             function for skill execution
 
              :param path: path to be followed
-             :param arg1: optional extra argument of task's execution (position of the target to be reached)
+             :param arg1: optional extra argument of skill's execution (position of the target to be reached)
              :param agent: actual agent position according to agent's knowledge
              :param stats: actual in-game character's stats according to agent's knowledge
              :return path to and position of a found tile

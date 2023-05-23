@@ -38,71 +38,25 @@ def start_bot(env, saver, filename):
     game_interface = GameWhisperer(env, mode, saver, filename)
     walk_logic = DungeonWalker(game_interface)
 
-    task_prio = config['task_prio_list']
-    task_modules_map = {}
-    for i in range(0, len(task_prio)):
-        task_name = task_prio[i]
+    skill_prio = config['skill_prio_list']
+    skill_modules_map = {}
+    for i in range(0, len(skill_prio)):
+        skill_name = skill_prio[i]
         
-        if hasattr(general_modules, task_name): task_class = getattr(general_modules, task_name)
-        elif hasattr(reach_modules, task_name): task_class = getattr(reach_modules, task_name)
-        elif hasattr(secret_passage_modules, task_name): task_class = getattr(secret_passage_modules, task_name)
-        else: sys.exit('task not found')
+        if hasattr(general_modules, skill_name): skill_class = getattr(general_modules, skill_name)
+        elif hasattr(reach_modules, skill_name): skill_class = getattr(reach_modules, skill_name)
+        elif hasattr(secret_passage_modules, skill_name): skill_class = getattr(secret_passage_modules, skill_name)
+        else: sys.exit('skill not found')
 
-        task_modules_map[task_name] = task_class(walk_logic, game_interface, task_name)
-        print(task_name)
-        '''
-        try:
-            task_class = getattr(general_modules, task_name)
-        except:
-            try:
-                task_class = getattr(reach_modules, task_name)
-            except:
-                try:
-                    task_class = getattr(secret_passage_modules, task_name)
-                except:
-                   raise Exception('task not found')
-
-        '''
-        '''
-        if task == "pray":
-            task_modules_map[task] = Pray(walk_logic, game_interface, task)
-        elif task == "take_a_break":
-            task_modules_map[task] = Break(walk_logic, game_interface, task)
-        elif task == "engrave_elbereth":
-            task_modules_map[task] = Elbereth(walk_logic, game_interface, task)
-        elif task == "run_for_your_life":
-            task_modules_map[task] = Run(walk_logic, game_interface, task)
-        elif task == "close_monster_fight":
-            task_modules_map[task] = Fight(walk_logic, game_interface, task)
-        elif task == "time_of_the_lunch":
-            task_modules_map[task] = Eat(walk_logic, game_interface, task)
-        elif task == "greed_of_gold":
-            task_modules_map[task] = Gold(walk_logic, game_interface, task)
-        elif task == "stairs_descent":
-            task_modules_map[task] = StairsDescent(walk_logic, game_interface, task)
-        elif task == "stairs_ascent":
-            task_modules_map[task] = StairsAscent(walk_logic, game_interface, task)
-        elif task == "reach_closest_explorable":
-            task_modules_map[task] = ExploreClosest(walk_logic, game_interface, task)
-        elif task == "reach_horizon":
-            task_modules_map[task] = Horizon(walk_logic, game_interface, task)
-        elif task == "search_hidden_room":
-            task_modules_map[task] = HiddenRoom(walk_logic, game_interface, task)
-        elif task == "explore_unseen":
-            task_modules_map[task] = Unseen(walk_logic, game_interface, task)
-        elif task == "search_hidden_corridor":
-            task_modules_map[task] = HiddenCorridor(walk_logic, game_interface, task)
-        elif task == "random_walk":
-            task_modules_map[task] = RandomWalk(walk_logic, game_interface, task)
-        print(task)
-        '''
-        time.sleep(0.2)
+        skill_modules_map[skill_name] = skill_class(walk_logic, game_interface, skill_name)
+        print(skill_name)
+        time.sleep(0.1)
 
     print("\nJudy is ready for YASD ...")
     print("\n\n")
     time.sleep(1)
 
-    return walk_logic, game_interface, task_prio, task_modules_map, games_number
+    return walk_logic, game_interface, skill_prio, skill_modules_map, games_number
 
 def main():
     parser = argparse.ArgumentParser()
@@ -272,8 +226,8 @@ def main():
         if create_dataset: saver = Saver(keys_to_save, filename)
         else: saver = None
 
-        dungeon_walker, game, logic, task_map, attempts = start_bot(env, saver, filename)
-        main_logic(dungeon_walker, game, logic, task_map, attempts)
+        dungeon_walker, game, logic, skill_map, attempts = start_bot(env, saver, filename)
+        main_logic(dungeon_walker, game, logic, skill_map, attempts)
 
 if __name__ == "__main__":
     main()

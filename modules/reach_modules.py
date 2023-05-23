@@ -1,18 +1,18 @@
-from modules.archetype_modules import ReachTask
+from modules.archetype_modules import ReachSkill
 
 
-class Gold(ReachTask):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Gold(ReachSkill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -24,9 +24,9 @@ class Gold(ReachTask):
             return self.name, path, coords
 
 
-class Horizon(ReachTask):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Horizon(ReachSkill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def condition_horizon_obj(self, tile, args):
         """
@@ -56,12 +56,12 @@ class Horizon(ReachTask):
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """
@@ -73,9 +73,9 @@ class Horizon(ReachTask):
             return self.name, path, coords
 
 
-class Unseen(ReachTask):
-    def __init__(self, dungeon_walker, game, task_name):
-        super().__init__(dungeon_walker, game, task_name)
+class Unseen(ReachSkill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        super().__init__(dungeon_walker, game, skill_name)
 
     def condition_unexplored_obj(self, tile, args):
         """
@@ -103,7 +103,7 @@ class Unseen(ReachTask):
         else:
             return False
 
-    # metodo ausiliario per la ricerca e il pathfinding verso un obbiettivo inesplorato/isolato
+    # auxiliary method for search and pathfinding towards an unexplored/isolated objective
     def unexplored_plan(self, glyph, not_reach_diag, isolated, safe_play):
         """
             function for finding a path to a tile carrying a target glyph
@@ -125,12 +125,12 @@ class Unseen(ReachTask):
 
     def planning(self, stats, safe_play, agent):
         """
-               function for task planning
+               function for skill planning
 
                :param safe_play: flag identifying the need for a safe play
                :param agent: actual agent position according to agent's knowledge
                :param stats: actual in-game character's stats according to agent's knowledge
-               :return name -> a string containing task name
+               :return name -> a string containing skill name
                        path -> a list containing the actions to be performed to reach a certain possible target
                        arg1 -> extra optional output (target's coordinates in this case)
         """

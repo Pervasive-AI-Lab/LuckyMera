@@ -27,6 +27,8 @@ class Saver:
         with open(self.filename+'.pkl', 'wb') as fp:
             pickle.dump(self.trajectory, fp)
 
+        print(f'Trajectory saved to {self.filename}')
+
 
 class GameWhisperer:
 
@@ -67,7 +69,7 @@ class GameWhisperer:
         self.agent_id = self.glyph_obs[self.a_yx[0]][self.a_yx[1]]
         self.memory[self.a_yx[0]][self.a_yx[0]] = self.act_num
         self.safe_play = False
-        self.strict_safe_play = False  # quando la strategia prevede la sicurezza più categorica
+        self.strict_safe_play = False # when the strategy provides for strict safety
         self.recently_ejected = False
         self.last_monster_searched = (-1, -1, 0)
         self.monster_exception = []
@@ -786,161 +788,6 @@ class GameWhisperer:
             self.current_obs, rew, done, info = self.env.step(19)
         self.update_obs()
 
-    #new version, not working
-    """
-    def do_it(self, x, direction):
-        ""
-            function for sending input to the game terminal.
-            It offers the management of specific cases, automating some actions.
-            ex: Engraving Elbereth
-
-            :param x: numeric value of the action to be performed according to the NLE implementation
-            :param direction: optional value useful when some actions require a direction to be performed
-            :return: the "reward" value (1 if episode success, 0 elsewise),
-                     the "done" value (TRUE if the episode endend, FALSE elsewise),
-                     the "info" object containg extra information (Gym standard implementation)
-        ""
-
-        # print(self.bl_stats)
-        self.old_turn = self.bl_stats[20]
-        rew = 0
-        done = False
-        info = None
-
-        #printing some information
-        if not self.fast_mode:
-            print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
-        if self.bl_stats[20] % 100 == 0:
-            print("actual score: ", self.bl_stats[9], " turn: ",
-                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
-            go_back(2)
-
-        #update some variables in memory
-        if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
-            self.pet_alive = False
-        if self.act_num % 50 == 0:  # modifica
-            self.panic = False
-        if self.ran:
-            if abs(self.ran_turn - self.bl_stats[20]) > self.ran_cooldown:
-                self.ran = False
-        if self.score < self.bl_stats[9]:
-            self.score = self.bl_stats[9]
-
-        #actual execution of the action
-        #to be sure, execute ESC before
-        if self.update_agent():
-            #self.current_obs, rew, done, info = env.step(38)
-            ""
-            if self.parsed_message.__contains__("Closed for inventory"):
-                for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                    if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                        self.shop_tiles.append(tile)
-            ""
-            self.current_obs, rew, done, info = env.step(38)
-            self.current_obs, rew, done, info = env.step(x)
-        self.update_obs()
-
-        ""
-        if self.update_agent():
-            self.current_obs, rew, done, info = env.step(38)
-
-        if self.update_agent():
-            self.current_obs, rew, done, info = env.step(x)
-        self.update_obs()
-        ""
-
-        #react to different messages
-        if self.parsed_message.__contains__("Hello stranger, who are you?"):  # respond Croesus
-            self.guard_encounter += 1
-            return -1, True, None
-
-        if self.parsed_message.__contains__("Closed for inventory"):
-            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                    self.shop_tiles.append(tile)
-
-        if self.parsed_message.__contains__("swap"):
-            self.pet_alive = True
-            self.pet_alive_turn = self.bl_stats[20]
-
-        if direction is not None and self.parsed_message.__contains__("In what direction?"):
-            self.current_obs, rew, done, info = env.step(direction)
-            self.update_obs()
-
-        if self.parsed_message.__contains__("Are you sure you want to pray?") or self.parsed_message.__contains__(
-                "Really attack"):
-            self.yes()
-
-        if self.parsed_message.__contains__("You are carrying too much to get through."):
-            next_tile = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], x)
-            self.exception.append(next_tile)
-            self.update_obs()
-
-        if self.parsed_message.__contains__("What do you want to write with?"):
-            self.current_obs, rew, done, info = env.step(106)  # -
-            self.update_obs()
-
-        if self.parsed_message.__contains__("Do you want to add to the current engraving?"):
-            self.no()
-
-        if self.parsed_message.__contains__("You wipe out the message that was written in the dust here."):
-            self.no()
-
-        if self.parsed_message.__contains__("You write in the dust with your fingertip."):
-            self.more()
-
-        #automatically engrave Elbereth
-        if self.parsed_message.__contains__("What do you want to write in the dust here?"):
-            self.current_obs, rew, done, info = env.step(36)  # E
-            self.current_obs, rew, done, info = env.step(1)  # l
-            self.current_obs, rew, done, info = env.step(6)  # b
-            self.current_obs, rew, done, info = env.step(35)  # e
-            self.current_obs, rew, done, info = env.step(67)  # r
-            self.current_obs, rew, done, info = env.step(35)  # e
-            self.current_obs, rew, done, info = env.step(91)  # t
-            self.current_obs, rew, done, info = env.step(3)  # h
-            self.more()
-            self.update_obs()
-
-        if self.parsed_message.__contains__("You swap places"):
-            self.pet_alive = True
-
-        if self.parsed_message.__contains__("Closed for inventory"):
-            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                    self.shop_tiles.append(tile)
-
-        if ((self.parsed_message.__contains__("Welcome") and self.parsed_message.__contains__(
-                "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) \
-                and not 0 <= self.bl_stats[20] <= 5:
-            self.shop_propagation(self.a_yx)
-
-        #enable/disable SAFE_MODE
-        if self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) <= 0.5 and not self.safe_play:
-            if not self.fast_mode: print("SAFE_MODE : enabled")
-            self.safe_play = True
-        elif self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) > 0.85 and self.safe_play:
-            if not self.fast_mode: print("SAFE_MODE : disabled")
-            self.safe_play = False
-
-        self.act_num += 1
-        if self.update_agent():
-            self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
-            if x == 75:  # it was a search
-                self.search_map[self.a_yx[0]][self.a_yx[1]] = 1
-                for next_tile in self.neighbors_8_dir(self.a_yx[0], self.a_yx[1]):
-                    self.search_map[next_tile[0]][next_tile[1]] = 1
-        if not self.fast_mode:  # and x != 10:
-            # go_back(27)
-            env.render()
-            # time.sleep(0.05)
-
-        self.new_turn = self.bl_stats[20]
-        self.depth_turns.setdefault(str(self.bl_stats[12]), 0)
-        self.depth_turns[str(self.bl_stats[12])] += abs(self.old_turn - self.new_turn)
-
-        return rew, done, info
-    """
     #old version, working
     def do_it(self, x, direction):
         """
@@ -1396,7 +1243,7 @@ class DungeonWalker:
     def __init__(self, game):
         self.game = game
 
-    # euristica per il calcolo della distanza tra due caselle della griglia 8-direzionale
+    # heuristic function to compute distances in a 8-directional grid
     @staticmethod
     def h_octile_distance(ay, ax, oy, ox):
         """
@@ -1440,10 +1287,10 @@ class DungeonWalker:
         while not frontier.empty():
             current = frontier.get()
 
-            if current == (oy, ox):  # abbiamo raggiunto il goal
+            if current == (oy, ox):  # goal reached
                 break
             near = self.game.neighbors(current[0][0], current[0][1], safe)
-            for next_tile in near:  # per cella adiacente alla corrente
+            for next_tile in near:  # for adjacent cell
                 new_cost = cost_so_far[current[0]] + 1
                 if next_tile not in cost_so_far or new_cost < cost_so_far[next_tile]:
                     cost_so_far[next_tile] = new_cost
@@ -1478,29 +1325,29 @@ class DungeonWalker:
 
                 if not_reach_diag and next_tile[0] == oy and next_tile[1] == ox and next_tile[0] != cursor[0] and \
                         next_tile[1] != cursor[1]:
-                    # il prossimo nodo è l'obbiettivo e non deve essere raggiunto in diagonale
-                    if next_tile[0] > cursor[0] and next_tile[1] > cursor[1]:  # y e x maggiori -> se
+                    # next node is the goal and must not be reached diagonally
+                    if next_tile[0] > cursor[0] and next_tile[1] > cursor[1]:  # y and x greater -> se
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
                             yellow_brick_road.append(2)  # s
                             yellow_brick_road.append(1)  # e
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
                             yellow_brick_road.append(1)  # e
                             yellow_brick_road.append(2)  # s
-                    elif next_tile[0] > cursor[0] and next_tile[1] < cursor[1]:  # y maggiore e x minore -> sw
+                    elif next_tile[0] > cursor[0] and next_tile[1] < cursor[1]:  # y greater and x smaller -> sw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
                             yellow_brick_road.append(2)  # s
                             yellow_brick_road.append(3)  # w
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
                             yellow_brick_road.append(3)  # w
                             yellow_brick_road.append(2)  # s
-                    elif next_tile[0] < cursor[0] and next_tile[1] < cursor[1]:  # y minore e x maggiore -> nw
+                    elif next_tile[0] < cursor[0] and next_tile[1] < cursor[1]:  # y smaller and x greater -> nw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
                             yellow_brick_road.append(0)  # n
                             yellow_brick_road.append(3)  # w
                         elif self.game.is_walkable(cursor[0] - 1, cursor[1]):
                             yellow_brick_road.append(3)  # w
                             yellow_brick_road.append(0)  # n
-                    elif next_tile[0] < cursor[0] and next_tile[1] > cursor[1]:  # y minore e x minore -> ne
+                    elif next_tile[0] < cursor[0] and next_tile[1] > cursor[1]:  # y smaller and x smaller -> ne
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
                             yellow_brick_road.append(0)  # n
                             yellow_brick_road.append(1)  # e
@@ -1518,18 +1365,18 @@ class DungeonWalker:
         return yellow_brick_road
 
 
-# metodo che pianifica la task da eseguire in un dato stato
-def planning(game, tasks_prio, task_map):
+# method that plans the skill to execute in a given state
+def planning(game, skills_prio, skill_map):
     """
-        function that plan the best task to perform, according to the in-game state of the agent
-        and the tasks priority establied by the user in agent's configuration
+        function that plan the best skill to perform, according to the in-game state of the agent
+        and the skills priority establied by the user in agent's configuration
 
         :param game: reference to the core "GameWhisperer" object
-        :param tasks_prio: starting tile x/horiziontal coordinate
-        :param task_map: objective tile y/vertical coordinate
-        :return: task_name -> a string containing the identification name of the planned task
-                 path -> an optional path useful in planned task's execution
-                 arg1 -> an optional extra argument useful for some task's execution
+        :param skills_prio: starting tile x/horiziontal coordinate
+        :param skill_map: objective tile y/vertical coordinate
+        :return: skill_name -> a string containing the identification name of the planned skill
+                 path -> an optional path useful in planned skill's execution
+                 arg1 -> an optional extra argument useful for some skill's execution
     """
 
     if game.get_new_turn() == game.get_old_turn():
@@ -1546,31 +1393,31 @@ def planning(game, tasks_prio, task_map):
     safe_play = game.get_safe_play()
     agent = game.get_agent_position()
 
-    while len(tasks_prio) > 0:
-        task_name = tasks_prio.pop(0)
-        task = task_map[task_name]
+    while len(skills_prio) > 0:
+        skill_name = skills_prio.pop(0)
+        skill = skill_map[skill_name]
 
-        out = task.planning(stats, safe_play, agent)
+        out = skill.planning(stats, safe_play, agent)
         if out is not None:
-            task_name_o = out[0]
+            skill_name_o = out[0]
             path = out[1]
             arg1 = out[2]
-            if task_name_o is not None:
-                return task_name, path, arg1
+            if skill_name_o is not None:
+                return skill_name, path, arg1
 
     return "failure", None, None
 
 
-# metodo che esegue le task pianificata
-def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
+# methos that executes the planned skills
+def main_logic(dungeon_walker, game, skills_prio, skill_map, attempts):
     """
-        function that plan the best task to perform, according to the in-game state of the agent
-        and the tasks priority establied by the user in agent's configuration
+        function that plan the best skill to perform, according to the in-game state of the agent
+        and the skills priority establied by the user in agent's configuration
 
         :param dungeon_walker: reference to the core "DungeonWalker" object
         :param game: reference to the core "GameWhisperer" object
-        :param tasks_prio: starting tile x/horiziontal coordinate
-        :param task_map: objective tile y/vertical coordinate
+        :param skills_prio: starting tile x/horiziontal coordinate
+        :param skill_map: objective tile y/vertical coordinate
         :param attempts: number of games to perform according to agent's configuration
         :return: //
     """
@@ -1615,10 +1462,9 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
             print(scores)
 
         while not done:
-            task, path, arg1 = planning(game, tasks_prio.copy(), task_map)
-            #assert task == 'NeuralWalk', 'Other task executed!'
+            skill, path, arg1 = planning(game, skills_prio.copy(), skill_map)
             if not game.get_fast_mode():
-                print("TASK: ", task, " PATH: ", path)
+                print("SKILL: ", skill, " PATH: ", path)
 
             if not game.update_agent() or game.get_stuck_counter() > 200:
                 break
@@ -1626,7 +1472,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
             agent = game.get_agent_position()
             stats = game.get_bl_stats()
 
-            if task == "failure":
+            if skill == "failure":
                 hs_n = game.get_hard_search_num()
                 if not game.update_agent() or hs_n > 200:
                     break
@@ -1640,7 +1486,7 @@ def main_logic(dungeon_walker, game, tasks_prio, task_map, attempts):
                 game.increment_hard_search_num()
                 rew, done, info = game.do_it(75, None)  # search per aspettare con value
             else:
-                rew, done, info = task_map[task].execution(path, arg1, agent, stats)
+                rew, done, info = skill_map[skill].execution(path, arg1, agent, stats)
 
         if rew == 1:
             success += 1
