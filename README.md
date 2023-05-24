@@ -2,37 +2,35 @@
 
 ## Description
 
-LuckyMera is an integrated framework built around the game of NetHack, one of the oldest and hardest roguelike video games.
-The architecture is designed to build intelligent agents for the game, by constructing high-level game strategies.
-LuckyMera is built following the principles of compositionality, modularity and extensibility; this means that the behavior of the agent is determined by a set of *skill* modules, that implement a series of actions to solve specific tasks.
-It offers a high-level interface so that it is easy to define and integrate new modules.
+LuckyMera is an integrated framework built around the game of NetHack, one of the oldest and hardest roguelike video games, with the objective to define new intelligent agents.
+LuckyMera is highly modular and extensible, since the behavior of the agent is determined by a set of *skill* modules, that implement a series of actions to solve specific tasks.
+The framework offers the possibility to easily integrate new skill, following any AI paradigm.
+
+Within the LuckyMera architecture, it is possible to save the experiences of the agent in trajectories, made by *\<state-action\>* pairs. These can be used as a form of supervision to train neural models; currently, the framework offers the implementation of the Behavioral Cloning algorithm.
+
+LuckyMera provides also the implementation of a symbolic agent, virtually capable of reaching the 6th place at the [NeurIPS 2021 NetHack Challenge](https://www.aicrowd.com/challenges/neurips-2021-the-nethack-challenge).
 
 LuckyMera leverages the challenging environment offered by NetHack to help AI researchers in designing, integrating and testing new approaches.
 It is well-suited to try both symbolic modules and neural ones, giving also the possibility to experiment with hybrid solutions.
 
-# ???
-LuckyMera offers a symbolic agent, some neural modules, a way to save trajectories, a training mode with BehavioralCloning implemented.
-# ???
-
 ## Installation
 
-LuckyMera needs essentially ```nle``` to work properly.
-# ???
-Optionally, [```nle_language_wrapper```](https://github.com/Pervasive-AI-Lab/nle-language-wrapper) is needed to obtain text observation, and ```stable-baselines``` to use our implementation of the Behavioral Cloning algorithm.
-# ???
+LuckyMera needs essentially only ```nle``` to work properly.
+
+Optionally, [```nle_language_wrapper```](https://github.com/Pervasive-AI-Lab/nle-language-wrapper) is needed if you want text observations, while, if you want to use our implementation of the Behavioral Cloning algorithm, you need to install ```stable_baselines3``` and ```pytorch```.
 
 After installing the dependencies, it can be installed by simply cloning the repository.
-```
-git clone https://github.com/Pervasive-AI-Lab/LuckyMera
+```bash
+$ git clone https://github.com/Pervasive-AI-Lab/LuckyMera
 ```
 
 ## Getting started
 LuckyMera can be configured via a simple ```config.json``` file and a handy *command-line* interface.
 
-### ```config.json```
-The configuration file is used to specify the parameters that influence the most the agent's behavior.
+### Configuration file 
+The ```config.json``` file is used to specify the parameters that influence the most the agent's behavior.
 
-```
+```json
 {"skill_priority_list": [
 "Pray",
 "Eat",
@@ -67,7 +65,9 @@ In fact, LuckyMera comes with three options:
 + *Training* mode: use the framework to train a neural model. You can specify the training algorithm and the dataset to use, together with other typical hyperparameters, *e.g.* the learning rate, the batch size and the number of epochs:
 
 ### Trying LuckyMera
-```
+Here is a quick example of how to use LuckyMera, showing its three different mode of use.
+
+```bash
 # inference mode
 $ python -m main 
        --inference
