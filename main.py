@@ -5,8 +5,6 @@ import argparse
 import gym
 from modules import general_modules, reach_modules, secret_passage_modules
 from core import Saver, GameWhisperer, DungeonWalker, main_logic
-import training
-from nle_language_wrapper import NLELanguageWrapper
 
 def start_bot(env, saver, filename):
     with open('config.json', 'r') as f:
@@ -204,6 +202,7 @@ def main():
     else: env = gym.make(env_name)
     
     if training_mode:
+        import training
         if not training_alg_name:
             raise SystemError('No training algorithm specified')
         if hasattr(training, training_alg_name):
@@ -221,8 +220,11 @@ def main():
             raise SystemError('language mode selected, but create_dataset is false')
         if create_dataset and not keys_to_save:
             raise SystemError('keys_to_save equal to None - No keys to save')
-        
-        if language_mode: env = NLELanguageWrapper(env, use_language_action=False)
+       
+
+        if language_mode:
+            from nle_language_wrapper import NLELanguageWrapper
+            env = NLELanguageWrapper(env, use_language_action=False)
         if create_dataset: saver = Saver(keys_to_save, filename)
         else: saver = None
 
