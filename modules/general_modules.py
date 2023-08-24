@@ -2,11 +2,9 @@ from modules.archetype_modules import Skill
 import random
 import numpy as np
 
-from minihack.agent.polybeast.evaluate import load_model, get_action
-from stable_baselines3 import A2C
-
 class BCWalk(Skill):
-    def __init__(self, dungeon_walker, game, skill_name):
+   def __init__(self, dungeon_walker, game, skill_name):
+        from stable_baselines3 import A2C
         super().__init__(dungeon_walker, game, skill_name)
         self.model = A2C.load('bc_model.zip')
         
@@ -23,6 +21,7 @@ class BCWalk(Skill):
 
 class NeuralWalk(Skill):
     def __init__(self, dungeon_walker, game, skill_name):
+        from minihack.agent.polybeast.evaluate import load_model, get_action
         super().__init__(dungeon_walker, game, skill_name)
         self.model, self.hidden = load_model('challenge', '/home/lquarantiello/minihack/minihack/agent/polybeast/outputs/Room-Ultimate-15x15_IMPALA_2e7')
 

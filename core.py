@@ -7,7 +7,7 @@ from queue import PriorityQueue
 import pickle
 
 import gym
-import minihack
+# import minihack
 from nle import nethack
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -810,7 +810,7 @@ class GameWhisperer:
         if not self.fast_mode:
             print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
         if self.bl_stats[20] % 100 == 0:
-            print("actual score: ", self.bl_stats[9], " turn: ",
+            print("current score: ", self.bl_stats[9], " turn: ",
                   self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
             go_back(2)
 
@@ -1459,7 +1459,7 @@ def main_logic(dungeon_walker, game, skills_prio, skill_map, attempts):
                 face = "ᕙ(`▿´)ᕗ"
             print("// Mean : ", game.get_total_score() / true_divisor, "// Median: ", mediana, " // Games: ",
                   len(scores), "      ", face, "               ")
-            print(scores)
+            #print(scores)
 
         while not done:
             skill, path, arg1 = planning(game, skills_prio.copy(), skill_map)

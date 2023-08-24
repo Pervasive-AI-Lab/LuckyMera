@@ -50,12 +50,16 @@ class BehavioralCloning(TrainingAlgorithm):
     def __init__(self, params, env_name, dataset, batch_size, checkpoint):
         super().__init__(params, env_name, checkpoint)
 
+        self.use_cuda = self.params['use_cuda'] and torch.cuda_is_available()
+        print(f'\n\n\n\n\n\nuse_cuda = {self.use_cuda}\n\n\n\n')
+
         self.env = FlattenObservation(self.env)
         self.train_loader, self.test_loader = self.create_dataloaders(dataset, batch_size)
         self.model = self.create_model(self.env)
 
     def create_model(self, env):
-        return A2C('MlpPolicy', env, verbose=1)
+        device = 'cuda' if self.use_cuda else 'cpu'
+        return A2C('MlpPolicy', env, verbose=1, device=device)
     
     def create_dataloaders(self, dataset, batch_size):
         with open(dataset, 'rb') as fp:
@@ -73,9 +77,9 @@ class BehavioralCloning(TrainingAlgorithm):
         return train_loader, test_loader
 
     def train(self):
-        use_cuda = self.params['use_cuda'] and torch.cuda.is_available()
+        #use_cuda = self.params['use_cuda'] and torch.cuda.is_available()
         torch.manual_seed(self.params['seed'])
-        device = torch.device("cuda" if use_cuda else "cpu")
+        device = torch.device("cuda" if self.use_cuda else "cpu")
         print(f'device for training: {device}')
 
         #policy = self.model.policy.to(device)

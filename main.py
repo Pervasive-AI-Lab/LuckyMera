@@ -10,8 +10,7 @@ def start_bot(env, saver, filename):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    print("\nJudy is looking for the Amulet of Yendor on the map ...\n")
-    print("\nVersion: 1.1.9 Stairs\n")
+    print("\nLuckyMera-v1.0 is looking for the Amulet of Yendor on the map ...\n")
 
     exec_mode = config['fast_mode']
     mode = False
@@ -50,7 +49,7 @@ def start_bot(env, saver, filename):
         print(skill_name)
         time.sleep(0.1)
 
-    print("\nJudy is ready for YASD ...")
+    print("\nLuckyMera-v.10 is ready for YASD ...")
     print("\n\n")
     time.sleep(1)
 
@@ -187,6 +186,7 @@ def main():
 
     training_params = {}
     training_params['use_cuda'] = flags.cuda
+    print(f'\n\n\n\nLuckyMera using cuda: {flags.cuda}')
     training_params['seed'] = flags.seed
     training_params['learning_rate'] = flags.learning_rate
     training_params['scheduler_gamma'] = flags.scheduler_gamma
