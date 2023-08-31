@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 class BCWalk(Skill):
-   def __init__(self, dungeon_walker, game, skill_name):
+    def __init__(self, dungeon_walker, game, skill_name):
         from stable_baselines3 import A2C
         super().__init__(dungeon_walker, game, skill_name)
         self.model = A2C.load('bc_model.zip')
