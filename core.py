@@ -165,31 +165,8 @@ class GameWhisperer:
             :param obs: given observation space
         """
 
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1]], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+        for i in range(-2,3):
+            print("   ".join(str(obs[self.a_yx[0] + i][self.a_yx[1] + j]) for j in range(-2,3)))
 
     def debug_crop(self):
         """
