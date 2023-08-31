@@ -482,21 +482,9 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and wallside, FALSE -> elsewise
         """
 
-        if y < self.size_y - 1:
-            if (self.char_obs[y + 1][x] == 124 or self.char_obs[y + 1][x] == 45) and \
-                    self.color_obs[y + 1][x] == 7 and self.search_map[y + 1][x] == 0:
-                return True
-        if y > 0:
-            if (self.char_obs[y - 1][x] == 124 or self.char_obs[y - 1][x] == 45) and \
-                    self.color_obs[y - 1][x] == 7 and self.search_map[y - 1][x] == 0:
-                return True
-        if x < self.size_x - 1:
-            if (self.char_obs[y][x + 1] == 124 or self.char_obs[y][x + 1] == 45) and \
-                    self.color_obs[y][x + 1] == 7 and self.search_map[y][x + 1] == 0:
-                return True
-        if x > 0:
-            if (self.char_obs[y][x - 1] == 124 or self.char_obs[y][x - 1] == 45) and \
-                    self.color_obs[y][x - 1] == 7 and self.search_map[y][x - 1] == 0:
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
+                    self.color_obs[nhb_y][nhb_x] == 7 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
         return False
 
@@ -510,17 +498,8 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and near an unknown tile, FALSE -> elsewise
         """
 
-        if y < self.size_y - 1:
-            if self.char_obs[y + 1][x] == 32 and self.search_map[y + 1][x] == 0:
-                return True
-        if y > 0:
-            if self.char_obs[y - 1][x] == 32 and self.search_map[y - 1][x] == 0:
-                return True
-        if x < self.size_x - 1:
-            if self.char_obs[y][x + 1] == 32 and self.search_map[y][x + 1] == 0:
-                return True
-        if x > 0:
-            if self.char_obs[y][x - 1] == 32 and self.search_map[y][x - 1] == 0:
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if self.char_obs[nhb_y][nhb_x] == 32 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
         return False
 
@@ -541,22 +520,13 @@ class GameWhisperer:
             return True
         walls_count_h = 0
         walls_count_v = 0
-        if y < self.size_y - 1:
-            if (self.char_obs[y + 1][x] == 124 or self.char_obs[y + 1][x] == 45) and \
-                    self.color_obs[y + 1][x] == 7:
-                walls_count_v += 1
-        if y > 0:
-            if (self.char_obs[y - 1][x] == 124 or self.char_obs[y - 1][x] == 45) and \
-                    self.color_obs[y - 1][x] == 7:
-                walls_count_v += 1
-        if x < self.size_x - 1:
-            if (self.char_obs[y][x + 1] == 124 or self.char_obs[y][x + 1] == 45) and \
-                    self.color_obs[y][x + 1] == 7:
-                walls_count_h += 1
-        if x > 0:
-            if (self.char_obs[y][x - 1] == 124 or self.char_obs[y][x - 1] == 45) and \
-                    self.color_obs[y][x - 1] == 7:
-                walls_count_h += 1
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
+                    self.color_obs[nhb_y][nhb_x] == 7:
+                if(nhb_x == x): #if vertically adjacent
+                    walls_count_v += 1
+                else:
+                    walls_count_h += 1
 
         if walls_count_h == 2 or walls_count_v == 2:
             return True
