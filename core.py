@@ -647,34 +647,10 @@ class GameWhisperer:
 
         neighborhood = list()
         doorway = self.is_doorway(y, x)
-        if y > 0:
-            if self.is_walkable(y - 1, x) and (not safe or self.is_safe(y - 1, x)):
-                neighborhood.append((y - 1, x))  # n
-            if x > 0:
-                if self.is_walkable(y - 1, x - 1) and (not safe or self.is_safe(y - 1, x - 1)) and not doorway:
-                    if not self.is_doorway(y - 1, x - 1):
-                        neighborhood.append((y - 1, x - 1))  # nw
-            if x < self.size_x - 1:
-                if self.is_walkable(y - 1, x + 1) and (not safe or self.is_safe(y - 1, x + 1)) and not doorway:
-                    if not self.is_doorway(y - 1, x + 1):
-                        neighborhood.append((y - 1, x + 1))  # ne
-        if x < self.size_x - 1:
-            if self.is_walkable(y, x + 1) and (not safe or self.is_safe(y, x + 1)):
-                neighborhood.append((y, x + 1))  # e
-            if y < self.size_y - 1:
-                if self.is_walkable(y + 1, x + 1) and (not safe or self.is_safe(y + 1, x + 1)) and not doorway:
-                    if not self.is_doorway(y + 1, x + 1):
-                        neighborhood.append((y + 1, x + 1))  # se
-        if y < self.size_y - 1:
-            if self.is_walkable(y + 1, x) and (not safe or self.is_safe(y + 1, x)):
-                neighborhood.append((y + 1, x))  # s
-            if x > 0:
-                if self.is_walkable(y + 1, x - 1) and (not safe or self.is_safe(y + 1, x - 1)) and not doorway:
-                    if not self.is_doorway(y + 1, x - 1):
-                        neighborhood.append((y + 1, x - 1))  # sw
-        if x > 0:
-            if self.is_walkable(y, x - 1) and (not safe or self.is_safe(y, x - 1)):
-                neighborhood.append((y, x - 1))  # w
+        for (nhb_y, nhb_x) in self.neighbors_8_dir(y,x):
+            if self.is_walkable(nhb_y, nhb_x) and (not safe or self.is_safe(nhb_y, nhb_x)) and \
+               (nhb_x == x or nhb_y == y or not (doorway or self.is_doorway(nhb_y, nhb_x))): #not diagonally adjacent or no doors in the way
+                neighborhood.append((nhb_y, nhb_x))
         return neighborhood
 
     def parse_message(self):
