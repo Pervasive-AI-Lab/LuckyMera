@@ -67,7 +67,7 @@ class GameWhisperer:
         self.agent_id = -1
         self.update_agent()
         self.agent_id = self.glyph_obs[self.a_yx[0]][self.a_yx[1]]
-        self.memory[self.a_yx[0]][self.a_yx[0]] = self.act_num
+        self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
         self.safe_play = False
         self.strict_safe_play = False # when the strategy provides for strict safety
         self.recently_ejected = False
@@ -106,7 +106,7 @@ class GameWhisperer:
 
             +1 +1 +1 +1 +1
             +1 +2 +2 +2 +1
-            +1 +2 +2 +2 +1  hazard on the center
+            +1 +2 +3 +2 +1  hazard on the center
             +1 +2 +2 +2 +1
             +1 +1 +1 +1 +1
 
