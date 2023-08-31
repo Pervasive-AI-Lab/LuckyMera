@@ -40,7 +40,7 @@ class Trajectory(Dataset):
         self.actions = expert_actions
 
     def __getitem__(self, index):
-        obs = np.concatenate((self.observations['chars'][index].flatten(), self.observations['colors'][index].flatten()), axis=None)
+        obs = np.concatenate((self.observations['chars'][index], self.observations['colors'][index]), axis=None)
         return obs, self.actions[index]
 
     def __len__(self):

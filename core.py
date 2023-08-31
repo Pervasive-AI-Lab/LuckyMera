@@ -760,7 +760,7 @@ class GameWhisperer:
                 for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
                     if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
                         self.shop_tiles.append(tile)
-                #observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
+                #observations.append(numpy.concatenate((game.current_obs['chars'], game.current_obs['colors']), axis=None))
 
         if self.score < self.bl_stats[9]:
             self.score = self.bl_stats[9]

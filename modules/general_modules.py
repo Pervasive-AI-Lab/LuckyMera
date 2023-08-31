@@ -14,7 +14,7 @@ class BCWalk(Skill):
 
     def execution(self, path, arg1, agent, stats):
         #format the obs as in training
-        a2c_obs =  np.concatenate((self.game.current_obs['chars'].flatten(), self.game.current_obs['colors'].flatten()), axis=None)
+        a2c_obs =  np.concatenate((self.game.current_obs['chars'], self.game.current_obs['colors']), axis=None)
         action, _ = self.model.predict(a2c_obs)
         rew, done, info = self.game.do_it(action, None)
         return rew, done, info
