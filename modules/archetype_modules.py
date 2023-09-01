@@ -90,12 +90,12 @@ class Skill:
                 done = True
                 break
             message = self.game.get_parsed_message()
-            if message.__contains__("It's solid stone.") or \
-                    message.__contains__("It's a wall.") or \
-                    message.__contains__("You can't move diagonally into an intact doorway.") or \
-                    message.__contains__("You try to move the boulder, but in vain.") or \
-                    message.__contains__("Perhaps that's why you cannot move it.") or \
-                    message.__contains__("You hear a monster behind the boulder."):
+            if any(message.__contains__(m) for m in ["It's solid stone.",
+                                                     "It's a wall.",
+                                                     "You can't move diagonally into an intact doorway.",
+                                                     "You try to move the boulder, but in vain.",
+                                                     "Perhaps that's why you cannot move it.",
+                                                     "You hear a monster behind the boulder."]):
                 self.game.append_exception(next_tile)
                 return -1, False, None  # failure
             if self.eject_button():

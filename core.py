@@ -67,7 +67,7 @@ class GameWhisperer:
         self.agent_id = -1
         self.update_agent()
         self.agent_id = self.glyph_obs[self.a_yx[0]][self.a_yx[1]]
-        self.memory[self.a_yx[0]][self.a_yx[0]] = self.act_num
+        self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
         self.safe_play = False
         self.strict_safe_play = False # when the strategy provides for strict safety
         self.recently_ejected = False
@@ -106,7 +106,7 @@ class GameWhisperer:
 
             +1 +1 +1 +1 +1
             +1 +2 +2 +2 +1
-            +1 +2 +2 +2 +1  hazard on the center
+            +1 +2 +3 +2 +1  hazard on the center
             +1 +2 +2 +2 +1
             +1 +1 +1 +1 +1
 
@@ -165,31 +165,8 @@ class GameWhisperer:
             :param obs: given observation space
         """
 
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 2][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] - 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] - 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0]][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0]][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1]], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0]][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 1][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 1][self.a_yx[1] + 2], " ")
-        print(obs[self.a_yx[0] + 2][self.a_yx[1] - 2], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] - 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1]], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 1], " ",
-              obs[self.a_yx[0] + 2][self.a_yx[1] + 2], " ")
+        for i in range(-2,3):
+            print("   ".join(str(obs[self.a_yx[0] + i][self.a_yx[1] + j]) for j in range(-2,3)))
 
     def debug_crop(self):
         """
@@ -505,21 +482,9 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and wallside, FALSE -> elsewise
         """
 
-        if y < self.size_y - 1:
-            if (self.char_obs[y + 1][x] == 124 or self.char_obs[y + 1][x] == 45) and \
-                    self.color_obs[y + 1][x] == 7 and self.search_map[y + 1][x] == 0:
-                return True
-        if y > 0:
-            if (self.char_obs[y - 1][x] == 124 or self.char_obs[y - 1][x] == 45) and \
-                    self.color_obs[y - 1][x] == 7 and self.search_map[y - 1][x] == 0:
-                return True
-        if x < self.size_x - 1:
-            if (self.char_obs[y][x + 1] == 124 or self.char_obs[y][x + 1] == 45) and \
-                    self.color_obs[y][x + 1] == 7 and self.search_map[y][x + 1] == 0:
-                return True
-        if x > 0:
-            if (self.char_obs[y][x - 1] == 124 or self.char_obs[y][x - 1] == 45) and \
-                    self.color_obs[y][x - 1] == 7 and self.search_map[y][x - 1] == 0:
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
+                    self.color_obs[nhb_y][nhb_x] == 7 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
         return False
 
@@ -533,17 +498,8 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and near an unknown tile, FALSE -> elsewise
         """
 
-        if y < self.size_y - 1:
-            if self.char_obs[y + 1][x] == 32 and self.search_map[y + 1][x] == 0:
-                return True
-        if y > 0:
-            if self.char_obs[y - 1][x] == 32 and self.search_map[y - 1][x] == 0:
-                return True
-        if x < self.size_x - 1:
-            if self.char_obs[y][x + 1] == 32 and self.search_map[y][x + 1] == 0:
-                return True
-        if x > 0:
-            if self.char_obs[y][x - 1] == 32 and self.search_map[y][x - 1] == 0:
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if self.char_obs[nhb_y][nhb_x] == 32 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
         return False
 
@@ -564,22 +520,13 @@ class GameWhisperer:
             return True
         walls_count_h = 0
         walls_count_v = 0
-        if y < self.size_y - 1:
-            if (self.char_obs[y + 1][x] == 124 or self.char_obs[y + 1][x] == 45) and \
-                    self.color_obs[y + 1][x] == 7:
-                walls_count_v += 1
-        if y > 0:
-            if (self.char_obs[y - 1][x] == 124 or self.char_obs[y - 1][x] == 45) and \
-                    self.color_obs[y - 1][x] == 7:
-                walls_count_v += 1
-        if x < self.size_x - 1:
-            if (self.char_obs[y][x + 1] == 124 or self.char_obs[y][x + 1] == 45) and \
-                    self.color_obs[y][x + 1] == 7:
-                walls_count_h += 1
-        if x > 0:
-            if (self.char_obs[y][x - 1] == 124 or self.char_obs[y][x - 1] == 45) and \
-                    self.color_obs[y][x - 1] == 7:
-                walls_count_h += 1
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+            if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
+                    self.color_obs[nhb_y][nhb_x] == 7:
+                if(nhb_x == x): #if vertically adjacent
+                    walls_count_v += 1
+                else:
+                    walls_count_h += 1
 
         if walls_count_h == 2 or walls_count_v == 2:
             return True
@@ -700,34 +647,10 @@ class GameWhisperer:
 
         neighborhood = list()
         doorway = self.is_doorway(y, x)
-        if y > 0:
-            if self.is_walkable(y - 1, x) and (not safe or self.is_safe(y - 1, x)):
-                neighborhood.append((y - 1, x))  # n
-            if x > 0:
-                if self.is_walkable(y - 1, x - 1) and (not safe or self.is_safe(y - 1, x - 1)) and not doorway:
-                    if not self.is_doorway(y - 1, x - 1):
-                        neighborhood.append((y - 1, x - 1))  # nw
-            if x < self.size_x - 1:
-                if self.is_walkable(y - 1, x + 1) and (not safe or self.is_safe(y - 1, x + 1)) and not doorway:
-                    if not self.is_doorway(y - 1, x + 1):
-                        neighborhood.append((y - 1, x + 1))  # ne
-        if x < self.size_x - 1:
-            if self.is_walkable(y, x + 1) and (not safe or self.is_safe(y, x + 1)):
-                neighborhood.append((y, x + 1))  # e
-            if y < self.size_y - 1:
-                if self.is_walkable(y + 1, x + 1) and (not safe or self.is_safe(y + 1, x + 1)) and not doorway:
-                    if not self.is_doorway(y + 1, x + 1):
-                        neighborhood.append((y + 1, x + 1))  # se
-        if y < self.size_y - 1:
-            if self.is_walkable(y + 1, x) and (not safe or self.is_safe(y + 1, x)):
-                neighborhood.append((y + 1, x))  # s
-            if x > 0:
-                if self.is_walkable(y + 1, x - 1) and (not safe or self.is_safe(y + 1, x - 1)) and not doorway:
-                    if not self.is_doorway(y + 1, x - 1):
-                        neighborhood.append((y + 1, x - 1))  # sw
-        if x > 0:
-            if self.is_walkable(y, x - 1) and (not safe or self.is_safe(y, x - 1)):
-                neighborhood.append((y, x - 1))  # w
+        for (nhb_y, nhb_x) in self.neighbors_8_dir(y,x):
+            if self.is_walkable(nhb_y, nhb_x) and (not safe or self.is_safe(nhb_y, nhb_x)) and \
+               (nhb_x == x or nhb_y == y or not (doorway or self.is_doorway(nhb_y, nhb_x))): #not diagonally adjacent or no doors in the way
+                neighborhood.append((nhb_y, nhb_x))
         return neighborhood
 
     def parse_message(self):
@@ -837,7 +760,7 @@ class GameWhisperer:
                 for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
                     if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
                         self.shop_tiles.append(tile)
-                #observations.append(numpy.concatenate((game.current_obs['chars'].flatten(), game.current_obs['colors'].flatten()), axis=None))
+                #observations.append(numpy.concatenate((game.current_obs['chars'], game.current_obs['colors']), axis=None))
 
         if self.score < self.bl_stats[9]:
             self.score = self.bl_stats[9]

@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 class BCWalk(Skill):
-   def __init__(self, dungeon_walker, game, skill_name):
+    def __init__(self, dungeon_walker, game, skill_name):
         from stable_baselines3 import A2C
         super().__init__(dungeon_walker, game, skill_name)
         self.model = A2C.load('bc_model.zip')
@@ -14,7 +14,7 @@ class BCWalk(Skill):
 
     def execution(self, path, arg1, agent, stats):
         #format the obs as in training
-        a2c_obs =  np.concatenate((self.game.current_obs['chars'].flatten(), self.game.current_obs['colors'].flatten()), axis=None)
+        a2c_obs =  np.concatenate((self.game.current_obs['chars'], self.game.current_obs['colors']), axis=None)
         action, _ = self.model.predict(a2c_obs)
         rew, done, info = self.game.do_it(action, None)
         return rew, done, info
