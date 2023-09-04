@@ -5,6 +5,7 @@ import argparse
 import gym
 from modules import general_modules, reach_modules, secret_passage_modules
 from core import Saver, GameWhisperer, DungeonWalker, main_logic
+from nle import nethack
 
 def start_bot(env, saver, filename):
     with open('config.json', 'r') as f:
@@ -58,6 +59,12 @@ def start_bot(env, saver, filename):
 def main():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument(
+        '--env_name',
+        type=str,
+        default='NetHackChallenge-v0',
+        help='The environment to use'
+    )
     parser.add_argument(
     '--inference',
     dest='training',
@@ -171,8 +178,8 @@ def main():
     )
     parser.set_defaults(training=False)
 
-
     flags = parser.parse_args()
+    env_name = flags.env_name
     create_dataset = flags.create_dataset
     language_mode = flags.language_mode
     keys_to_save = flags.keys_to_save
@@ -195,11 +202,13 @@ def main():
     print(f'training mode: {training_mode}')
     print(f'obs_keys: {observation_keys}')
 
-    env_name = 'NetHackChallenge-v0'
+    if 'MiniHack' in env_name: import minihack
+
+    # use the complete action space also for minihack envs
     if observation_keys:
-        env = gym.make(env_name, observation_keys=observation_keys)
+        env = gym.make(env_name, observation_keys=observation_keys, actions=nethack.ACTIONS)
     #if no observation_keys are specified, all the keys are included
-    else: env = gym.make(env_name)
+    else: env = gym.make(env_name, actions=nethack.ACTIONS)
     
     if training_mode:
         import training
