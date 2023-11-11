@@ -727,6 +727,14 @@ class GameWhisperer:
         return rew, done, info
 
     def single_step(self, action_index):
+        """
+            function for sending a single input to the game terminal.
+            It offers the management of specific cases, automating some actions.
+            :param action_index: action to be performed. Must be the index of the action in nle.nethack.ACTION
+            :return: the "reward" value (1 if episode success, 0 elsewise),
+                     the "done" value (TRUE if the episode endend, FALSE elsewise),
+                     the "info" object containg extra information (Gym standard implementation)
+        """
         rew = 0
         done = False
         info = None
