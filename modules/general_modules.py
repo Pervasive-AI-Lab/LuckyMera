@@ -1,4 +1,5 @@
 from modules.archetype_modules import Skill
+import nle.nethack as nh
 import random
 import numpy as np
 
@@ -138,9 +139,9 @@ class StairsAscent(Skill):
                      arg1 -> extra optional output (target's coordinates in this case)
          """
 
-        if stats[12] == 1 or 2 <= stats[21] <= 4:  # or stats[18] >= stats[12] + 3:  # or self.bl_stats[18] >= self.bl_stats[12] + 3:
+        if stats.depth == 1 or 2 <= stats.hunger_state <= 4:  # or stats.experience_level >= stats.depth + 3:  # or self.bl_stats.experience_level >= self.bl_stats.depth + 3:
             return None, None, None
-        known, coords = self.custom_contain(self.game.get_stairs_locations()[0], stats[12])
+        known, coords = self.custom_contain(self.game.get_stairs_locations()[0], stats.depth)
         if not known:
             path, coords = self.standard_plan([(60, 7)], False, False)
         else:
@@ -193,9 +194,9 @@ class Pray(Skill):
                      arg1 -> extra optional output (None)
          """
 
-        if (stats[21] == 4 or stats[10] <= 6 or (
-                stats[11] != 0 and (stats[10] / stats[11]) < 0.14)) and (
-                abs(self.game.get_last_pray() - stats[20]) >= 500 or self.game.get_last_pray() == -1) and stats[
+        if (stats.hunger_state == 4 or stats.hitpoints <= 6 or (
+                stats.max_hitpoints != 0 and (stats.hitpoints / stats.max_hitpoints) < 0.14)) and (
+                abs(self.game.get_last_pray() - stats.time) >= 500 or self.game.get_last_pray() == -1) and stats[
              20] > 100:
             return self.name, None, None
 
@@ -236,7 +237,7 @@ class Elbereth(Skill):
                      arg1 -> extra optional output (None)
          """
 
-        if abs(self.game.get_elbereth_violation() - stats[20]) < 7 or stats[21] == 4:
+        if abs(self.game.get_elbereth_violation() - stats.time) < 7 or stats.hunger_state == 4:
             return None, None, None  # 1.1.8.6
         for tile in self.game.neighbors_8_dir(agent[0], agent[1]):
             char = self.game.get_char(tile[0], tile[1])
@@ -246,7 +247,7 @@ class Elbereth(Skill):
                 return None, None, None  # 1.1.8.2
 
         # not self.game.check_engraved(agent) and
-        if self.game.get_risk(agent[0], agent[1]) > 4 or (stats[11] != 0 and (stats[10] / stats[11]) < 0.75):
+        if self.game.get_risk(agent[0], agent[1]) > 4 or (stats.max_hitpoints != 0 and (stats.hitpoints / stats.max_hitpoints) < 0.75):
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):
@@ -269,10 +270,10 @@ class Elbereth(Skill):
 
         # w_count = 0
         # risk = self.game.get_risk(agent[0], agent[1])
-        # ((stats[11] != 0 and (stats[10] / stats[11]) < 0.8) or risk > 2)
-        while (stats[11] != 0 and (stats[10] / stats[11]) < 0.9) \
-                and not done and stats[21] < 4:  # and not (w_count > 1 and risk >= 2):
-            rew, done, info = self.game.do_it(75, None)  # wait - with search
+        # ((stats.max_hitpoints != 0 and (stats.hitpoints / stats.max_hitpoints) < 0.8) or risk > 2)
+        while (stats.max_hitpoints != 0 and (stats.hitpoints / stats.max_hitpoints) < 0.9) \
+                and not done and stats.hunger_state < 4:  # and not (w_count > 1 and risk >= 2):
+            rew, done, info = self.game.do_it(nh.Command.SEARCH)  # wait - with search
             if not self.game.get_fast_mode():
                 print("\nElbereth WAIT ---\n")
             # risk = self.game.get_risk(agent[0], agent[1])
@@ -320,7 +321,7 @@ class Run(Skill):
 
         risk = self.game.get_risk(agent[0], agent[1])
         # risk < 1 or risk > 3 or \
-        if risk < 1 or (stats[11] != 0 and (stats[10] / stats[11]) > 0.50) or self.game.get_ran():
+        if risk < 1 or (stats.max_hitpoints != 0 and (stats.hitpoints / stats.max_hitpoints) > 0.50) or self.game.get_ran():
             return None, None, None
         else:
             if self.game.is_doorway(agent[0], agent[1]):
@@ -411,7 +412,7 @@ class ExploreClosest(Skill):
                         nx = next_tile[1]
                         break
                 path = self.dungeon_walker.path_finder(ny, nx, False, safe_play)
-            elif char == 35:
+            elif char == ord('#'):
                 path = self.dungeon_walker.path_finder(y, x, False, safe_play)
             else:
                 path = self.dungeon_walker.path_finder(y, x, True, safe_play)
@@ -429,11 +430,11 @@ class ExploreClosest(Skill):
 
         if args.__contains__((self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1]))) and \
                 (self.game.get_memory(tile[0], tile[1]) == -1 or
-                 (not self.game.get_char(tile[0], tile[1]) == 35 and abs(
+                 (not self.game.get_char(tile[0], tile[1]) == ord('#') and abs(
                      self.game.get_memory(tile[0], tile[1]) - self.game.get_act_num()) >
                   self.game.glyph_cooldown(
                       (self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1]))))) \
-                and (not self.game.get_char(tile[0], tile[1]) == 46 or self.game.is_doorway(tile[0], tile[1])):
+                and (not self.game.get_char(tile[0], tile[1]) == ord('.') or self.game.is_doorway(tile[0], tile[1])):
             return True
         else:
             return False
@@ -495,22 +496,20 @@ class ExploreClosest(Skill):
                                                                         (not equal and (char_n, color_n) != (
                                                                                 char, color)) or
                                                                         (equal and (char_n, color_n) == (
-                                                                                char, color)) or
-                                                                        char_n == 96 or
-                                                                        char_n == 37 or
-                                                                        char_n == 36) \
+                                                                                char, color)) or char_n in b"`%$") \
                     and self.game.is_walkable(next_tile[0], next_tile[1]):
                 agent = self.game.get_agent_position()
                 rew, done, info = self.game.do_it(
-                    self.game.move_translator(agent[0], agent[1], next_tile[0], next_tile[1]), None)
+                    self.game.move_translator(agent[0], agent[1], next_tile[0], next_tile[1]))
                 if self.game.update_agent():
                     message = self.game.get_parsed_message()
-                    if message.__contains__("It's solid stone.") or \
-                            message.__contains__("It's a wall.") or \
-                            message.__contains__("You can't move diagonally into an intact doorway.") or \
-                            message.__contains__("You try to move the boulder, but in vain.") or \
-                            message.__contains__("Perhaps that's why you cannot move it.") or \
-                            message.__contains__("You hear a monster behind the boulder."):
+                    if any(x in message for x in [
+                            "It's solid stone.",
+                            "It's a wall.",
+                            "You can't move diagonally into an intact doorway.",
+                            "You try to move the boulder, but in vain.",
+                            "Perhaps that's why you cannot move it.",
+                            "You hear a monster behind the boulder."]):
                         self.game.append_exception(next_tile)
                         return 0, rew, done, info
                     return 1, rew, done, info
@@ -619,12 +618,12 @@ class ExploreClosest(Skill):
                                           4) and not self.eject_button() and j < 40 and not done and not self.game.get_parsed_message().__contains__(
                  "You find"):  # when near void
 
-                if 3 <= stats[21] <= 4:
+                if 3 <= stats.hunger_state <= 4:
                     break
 
                 if not self.game.get_fast_mode():
                     print("searching on the void... try: ", j)
-                rew, done, info = self.game.do_it(75, None)  # search
+                rew, done, info = self.game.do_it(nh.Command.SEARCH)  # search
                 agent = self.game.get_agent_position()
                 stats = self.game.get_bl_stats()
                 j += 1
@@ -896,7 +895,7 @@ class Eat(Skill):
         message = self.game.parse_all()
         stats = self.game.get_bl_stats()
 
-        if (message.__contains__("gray ooze") or message.__contains__("acid blob") or message.__contains__("green mold") or message.__contains__("black naga")) and stats[10] < 20:
+        if (message.__contains__("gray ooze") or message.__contains__("acid blob") or message.__contains__("green mold") or message.__contains__("black naga")) and stats.hitpoints < 20:
             return False
 
         agent = self.game.get_agent_position()
@@ -923,7 +922,7 @@ class Eat(Skill):
                        arg1 -> extra optional output (target's coordinates in this case)
         """
 
-        if stats[21] < 1:
+        if stats.hunger_state < 1:
             return None, None, None
         path, coords = self.standard_plan([(37, -1)], False, safe_play)
         if path is None or len(path) == 0:
@@ -996,14 +995,14 @@ class Eat(Skill):
                 self.game.yes()
                 gnam = True
         elif self.fresh_food():
-            self.game.do_it(35, None)  # eat
+            self.game.do_it(nh.Command.EAT)  # eat
             message = self.game.get_parsed_message()
             if message.__contains__("eat") and message.__contains__("?"):
                 self.game.yes()
                 gnam = True
-        #elif stats[21] == 4:
+        #elif stats.hunger_state == 4:
             #self.game.reset_inedible()
-            #self.game.do_it(35, None)  # eat
+            #self.game.do_it(nh.Command.EAT)  # eat
             #message = self.game.get_parsed_message()
             #if message.__contains__("eat") and message.__contains__("?"):
                 #self.game.yes()
@@ -1033,8 +1032,8 @@ class Break(Skill):
         for tile in near:
             if self.game.is_a_monster(tile[0], tile[1]):
                 return None, None, None
-        if stats[21] <= 2 and self.game.get_risk(agent[0], agent[1]) == 0 and stats[11] != 0 \
-                and (stats[10] / stats[11]) < 0.65:
+        if stats.hunger_state <= 2 and self.game.get_risk(agent[0], agent[1]) == 0 and stats.max_hitpoints != 0 \
+                and (stats.hitpoints / stats.max_hitpoints) < 0.65:
             return self.name, None, None
 
     def execution(self, path, arg1, agent, stats):

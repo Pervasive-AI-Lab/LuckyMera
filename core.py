@@ -2,15 +2,15 @@ import math
 import time
 import sys
 import numpy as np
-from collections import defaultdict
+from collections import namedtuple, defaultdict
 from queue import PriorityQueue
 import pickle
 
-import gym
 # import minihack
-from nle import nethack
+import nle.nethack as nh
 
 np.set_printoptions(threshold=sys.maxsize)
+
 
 class Saver:
     def __init__(self, obs_keys, filename):
@@ -30,16 +30,18 @@ class Saver:
         print(f'Trajectory saved to {self.filename}')
 
 
+Inventory = namedtuple('Inventory', 'letters classes glyphs descs')
+BLStats = namedtuple('BLStats', 'x y strength_percentage strength dexterity constitution intelligence wisdom charisma score hitpoints max_hitpoints depth gold energy max_energy armor_class monster_level experience_level experience_points time hunger_state carrying_capacity dungeon_number level_number prop_mask align')
+
 class GameWhisperer:
 
     def __init__(self, env, fast_mode, saver, filename):
         self.env = env
         self.a_yx = [-1, -1]
-        self.walkable_glyphs = [(33, -1), (34, -1), (35, 7), (35, 15), (36, -1), (37, -1), (40, -1), (41, -1), (42, -1),
-                                (46, -1),
-                                (47, -1), (45, 3), (60, -1), (61, -1), (62, -1), (63, -1), (64, 15), (91, -1), (92, -1),
-                                (93, -1),
-                                (96, -1), (100, 15), (100, 7), (102, 15), (102, 7), (117, -1), (124, 3)]
+        self.walkable_glyphs = [(x, -1) for x in b'!"$%()*./<=>?[\\]`u'] + \
+            [(x, 7) for x in b'#df'] + \
+            [(x, 15) for x in b'#@df'] + \
+            [(x, 3) for x in b'-|']
         self.size_y = 21
         self.size_x = 79
         self.current_obs = self.env.reset()
@@ -47,10 +49,11 @@ class GameWhisperer:
         self.char_obs = self.current_obs['chars']
         self.color_obs = self.current_obs['colors']
         self.message = self.current_obs['message']
+        self.update_inv()
         self.parsed_message = self.parse_message()
         if 'tty_chars' in self.current_obs.keys():
             self.all_obs = self.current_obs['tty_chars']
-        self.bl_stats = self.current_obs['blstats']
+        self.bl_stats = BLStats(*self.current_obs['blstats'])
         self.memory = [[-1 for _ in range(self.size_x)] for _ in range(self.size_y)]
         self.exception = []
         self.search_map = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
@@ -149,13 +152,14 @@ class GameWhisperer:
         self.char_obs = self.current_obs['chars']
         self.color_obs = self.current_obs['colors']
         self.message = self.current_obs['message']
+        self.update_inv()
         self.parsed_message = self.parse_message()
-        self.bl_stats = self.current_obs['blstats']
+        self.bl_stats = BLStats(*self.current_obs['blstats'])
         if 'tty_chars' in self.current_obs.keys():
             self.all_obs = self.current_obs['tty_chars']
-        if self.last_risk_update != self.bl_stats[20]:
+        if self.last_risk_update != self.bl_stats.time:
             self.update_riskmap()
-            self.last_risk_update = self.bl_stats[20]
+            self.last_risk_update = self.bl_stats.time
 
     def crop_printer(self, obs):
         """
@@ -390,7 +394,7 @@ class GameWhisperer:
 
         if char == 101 and not self.panic:  # spore or eye
             return False
-        elif char == 70 and color != 10 and color != 5 and not self.panic and self.bl_stats[10] < 15:  # Molds
+        elif char == 70 and color != 10 and color != 5 and not self.panic and self.bl_stats.hitpoints < 15:  # Molds
             return False
         # elif char == 98 and color == 2 and not self.panic:  # Acid Blob
         #    return False
@@ -420,19 +424,20 @@ class GameWhisperer:
 
         if self.monster_exception.__contains__((y, x)):
             return False
-        # if char == 104 and self.bl_stats[12] >= 3:
+        # if char == 104 and self.bl_stats.depth >= 3:
         # return False
-        if char == 64 and color != 15:
+        if char == ord('@') and color != 15:
             return True
-        if [58, 59, 38, 39, 44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122:
-            if (char == 102 or char == 100) and (
+        if char in b":;&'," or 65 <= char <= 90 or 97 <= char <= 122:
+            #if self.is_pet(char, color)
+            if (char in b"fd") and (
                     color == 7 or color == 15) and self.pet_alive:  # or (find and self.is_unexplored(y, x)):
                 return False
-            elif char == 117 and color == 3 and self.pet_alive:  # il pony amico non è un mostro
+            elif char == ord('u') and color == 3 and self.pet_alive:  # tamed pony is not a moster
                 return False
-            elif char == 101 and not self.panic and self.stuck_counter < 100:  # spore or eye
+            elif char == ord('e') and not self.panic and self.stuck_counter < 100:  # spore or eye
                 return False
-            elif char == 70 and color != 10 and color != 5 and not self.panic and self.bl_stats[10] < 15:  # Molds
+            elif char == ord('F') and color != 10 and color != 5 and not self.panic and self.bl_stats.hitpoints < 15:  # Molds
                 return False
             # elif char == 98 and color == 2 and not self.panic:  # Acid Blob
             #    return False
@@ -453,7 +458,7 @@ class GameWhisperer:
         char = self.char_obs[y][x]
         color = self.color_obs[y][x]
 
-        if char == 98 or char == 99 or char == 101 or char == 80 or char == 82 or char == 70 or char == 64:
+        if char in b"bcePRF@":
             return True
         else:
             return False
@@ -515,15 +520,13 @@ class GameWhisperer:
 
         char = self.char_obs[y][x]
         color = self.color_obs[y][x]
-        if (
-                char == 43 or char == 124 or char == 45) and color == 3:  # or (char == 46 and self.is_unexplored(y, x)): wip
+        if char in b'+|-' and color == 3:  # or (char == 46 and self.is_unexplored(y, x)): wip
             return True
         walls_count_h = 0
         walls_count_v = 0
         for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
-            if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
-                    self.color_obs[nhb_y][nhb_x] == 7:
-                if(nhb_x == x): #if vertically adjacent
+            if self.char_obs[nhb_y][nhb_x] in b"|-" and self.color_obs[nhb_y][nhb_x] == 7:
+                if nhb_x == x:  # if vertically adjacent
                     walls_count_v += 1
                 else:
                     walls_count_h += 1
@@ -845,11 +848,11 @@ class GameWhisperer:
             self.env.render()
             # time.sleep(0.05)
         if self.saver:
-            self.saver.save_obs_and_action(self.current_obs, x)
+            self.saver.save_obs_and_action(self.current_obs, action_index)
 
-        self.new_turn = self.bl_stats[20]
-        self.depth_turns.setdefault(str(self.bl_stats[12]), 0)
-        self.depth_turns[str(self.bl_stats[12])] += abs(self.old_turn - self.new_turn)
+        self.new_turn = self.bl_stats.time
+        self.depth_turns.setdefault(str(self.bl_stats.depth), 0)
+        self.depth_turns[str(self.bl_stats.depth)] += abs(self.old_turn - self.new_turn)
 
         return rew, done, info
 
@@ -863,7 +866,7 @@ class GameWhisperer:
 
         for near in self.neighbors_8_dir(tile[0], tile[1]):
             char = self.char_obs[near[0]][near[1]]
-            if char == 124 or char == 45 or char == 35 or char == 32 or (
+            if char in b'|-# ' or (
                     near[0] == self.a_yx[0] and near[1] == self.a_yx[
                     1]):  # or ([58,59,38,39,44].__contains__(char) or 65 <= char <= 90 or 97 <= char <= 122) :
                 continue
@@ -1087,6 +1090,9 @@ class GameWhisperer:
     def get_bl_stats(self):
         return self.bl_stats
 
+    def get_inv_item_letters(self, regexp):
+        pass
+
     def get_safe_play(self):
         return self.safe_play
 
@@ -1112,11 +1118,11 @@ class GameWhisperer:
         return self.last_pray
 
     def update_last_pray(self):
-        self.last_pray = self.bl_stats[20]
+        self.last_pray = self.bl_stats.time
 
     def update_ran(self):
         self.ran = True
-        self.ran_turn = self.bl_stats[20]
+        self.ran_turn = self.bl_stats.time
 
     def reset_ran(self):
         self.ran = False
