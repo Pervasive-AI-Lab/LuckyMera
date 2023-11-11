@@ -82,7 +82,7 @@ class Skill:
                                                                                                        next_tile[1]):  # se la prossima casella contiene del cibo
                     for k in range(0, 10):
                         # modifica 1.1
-                        self.game.do_it(nh.Command.UNTRAP, action)  # untrap
+                        self.game.do_it(nh.Command.UNTRAP, [action])  # untrap
                 if self.game.is_walkable(next_tile[0], next_tile[1]):
                     rew, done, info = self.game.do_it(action)
                 else:
