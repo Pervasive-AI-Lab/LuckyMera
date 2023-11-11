@@ -17,7 +17,7 @@ class BCWalk(Skill):
         #format the obs as in training
         a2c_obs =  np.concatenate((self.game.current_obs['chars'], self.game.current_obs['colors']), axis=None)
         action, _ = self.model.predict(a2c_obs)
-        rew, done, info = self.game.do_it(action, None)
+        rew, done, info = self.game.do_it(nh.ACTIONS[action])
         return rew, done, info
 
 class NeuralWalk(Skill):
@@ -33,7 +33,7 @@ class NeuralWalk(Skill):
     def execution(self, path, arg1, agent, stats):
         action, self.hidden = get_action(self.model, self.game.current_obs, self.hidden, done=False, watch=False)
         print(f"Action selected: {action}")
-        rew, done, info = self.game.do_it(action, None)
+        rew, done, info = self.game.do_it(nh.ACTIONS[action])
         return rew, done, info
 
 class RandomWalk(Skill):
@@ -47,9 +47,9 @@ class RandomWalk(Skill):
 
     def execution(self, path, arg1, agent, stats):
         #movement action are from id 0 to 7 included
-        move_action = random.randint(0,7)
-        print(f"Movement action selected: {move_action}")
-        rew, done, info = self.game.do_it(move_action, None)
+        move_action = nh.ACTIONS[random.randint(0,7)]
+        print("Movement action selected:", str(move_action))
+        rew, done, info = self.game.do_it(move_action)
         self.counter += 1
         print(f'RandomWalk counter: {self.counter}')
         return rew, done, info
@@ -114,7 +114,7 @@ class StairsDescent(Skill):
             return rew, done, info
         agent = self.game.get_agent_position()
         if not done and agent[0] == arg1[0] and agent[1] == arg1[1]:
-            rew, done, info = self.game.do_it(17, None)  # go down
+            rew, done, info = self.game.do_it(nh.MiscDirection.DOWN)  # go down
             agent = self.game.get_agent_position()
             self.game.partial_reset_game()
             self.game.reset_hard_search_num()  # ricorda
@@ -169,7 +169,7 @@ class StairsAscent(Skill):
             return rew, done, info
         agent = self.game.get_agent_position()
         if not done and agent[0] == arg1[0] and agent[1] == arg1[1]:
-            rew, done, info = self.game.do_it(16, None)  # go up
+            rew, done, info = self.game.do_it(nh.MiscDirection.UP)  # go up
             agent = self.game.get_agent_position()
             self.game.partial_reset_game()
             self.game.reset_hard_search_num()  # ricorda
@@ -212,7 +212,7 @@ class Pray(Skill):
          """
 
         if self.game.update_agent():
-            rew, done, info = self.game.do_it(62, None)  # pray
+            rew, done, info = self.game.do_it(nh.Command.PRAY)  # pray
             self.game.update_last_pray()
         else:
             rew = 0
@@ -261,7 +261,20 @@ class Elbereth(Skill):
              :return path to and position of a found tile
          """
 
-        rew, done, info = self.game.do_it(36, None)  # engrave
+        def engraving(text):
+            if "What do you want to write with?" in self.game.get_parsed_message():
+                yield '-'
+            if "Do you want to add to the current engraving?" in self.game.get_parsed_message():
+                yield 'n'
+            if "You wipe out the message that was written in the dust here." in self.game.get_parsed_message():
+                yield '\r'
+            if "You write in the dust with your fingertip." in self.game.get_parsed_message():
+                yield '\r'
+            if "What do you want to write in the dust here?" in self.game.get_parsed_message():
+                yield from text
+                yield '\r'
+
+        rew, done, info = self.game.do_it(nh.Command.ENGRAVE, engraving("Elbereth"))  # engrave
         self.game.append_engraved((agent[0], agent[1]))
 
         # 1.1.8.3
@@ -362,18 +375,9 @@ class Run(Skill):
          """
 
         rew, done, info = self.game.do_it(
-            self.game.move_translator(agent[0], agent[1], arg1[0], arg1[1]),
-            None)
+            self.game.move_translator(agent[0], agent[1], arg1[0], arg1[1]))
         message = self.game.get_parsed_message()
-        if (message.__contains__("fox") or
-            message.__contains__("dog") or
-            message.__contains__("pony") or
-            message.__contains__("kitten") or
-            message.__contains__("ant") or
-            message.__contains__("throw") or
-            message.__contains__("bat") or
-            message.__contains__("bee")) and \
-                not message.__contains__("swap"):
+        if "swap" not in message and any(name in message for name in ["fox", "dog", "pony", "kitten", "ant", "throw", "bat", "bee"]):
             self.game.update_ran()
         else:
             self.game.reset_ran()
@@ -548,7 +552,7 @@ class ExploreClosest(Skill):
                     return False, rew, done
                 if not self.game.get_fast_mode():
                     print("search in suspect corridor end... try:", i)
-                rew, done, info = self.game.do_it(75, None)  # search
+                rew, done, info = self.game.do_it(nh.Command.SEARCH)  # search
                 i += 1
                 # prova a spostarsi in una casella '#' appena scoperta
                 if not done:
@@ -643,11 +647,11 @@ class ExploreClosest(Skill):
             if not done and rew != -1 and not self.game.get_parsed_message().__contains__(
                     "This door is already open.") and not self.game.get_parsed_message().__contains__("inventory"):
                 door_direction = self.game.move_translator(agent[0], agent[1], arg1[0], arg1[1])
-                rew, done, info = self.game.do_it(57, door_direction)  # open
+                rew, done, info = self.game.do_it(nh.Command.OPEN, [door_direction])  # open
                 while not done and not self.eject_button() and self.game.get_parsed_message().__contains__(
                         "This door is locked.") or self.game.get_parsed_message().__contains__("WHAMMM!!!") \
                         or self.game.get_parsed_message().__contains__("The door resists!"):
-                    rew, done, info = self.game.do_it(48, door_direction)  # kick
+                    rew, done, info = self.game.do_it(nh.Command.KICK, [door_direction])  # kick
                 self.game.clear_memory(arg1[0], arg1[1])
             return rew, done, info
 
@@ -776,14 +780,14 @@ class Fight(Skill):
                 direction = path.pop()
                 next_tile = self.game.inverse_move_translator(agent[0], agent[1], direction)
                 if not self.game.is_passive_monster(next_tile[0], next_tile[1]):
-                    rew, done, info = self.game.do_it(direction, None)
+                    rew, done, info = self.game.do_it(direction)
             else:
                 return 0, True, None
         elif y_dist == 2 or x_dist == 2 and not done:
-            rew, done, info = self.game.do_it(75, None)  # Wait - searching
+            rew, done, info = self.game.do_it(nh.Command.SEARCH)  # Wait - searching
         elif not done:
             direction = self.game.move_translator(agent[0], agent[1], arg1[0], arg1[1])
-            self.game.do_it(direction, None)  # attack
+            self.game.do_it(direction)  # attack
 
             message = self.game.get_parsed_message()
             act = self.game.get_act_num()
@@ -984,7 +988,7 @@ class Eat(Skill):
                 parsed_all.__contains__("tin") or \
                 parsed_all.__contains__("kelp frond") or \
                 parsed_all.__contains__("lizard"):
-            self.game.do_it(35, None)  # eat
+            self.game.do_it(nh.Command.EAT)  # eat
             message = self.game.get_parsed_message()
             if message.__contains__("corpse") and \
                     not (message.__contains__("lichen") or message.__contains__("lizard")):
@@ -1047,9 +1051,9 @@ class Break(Skill):
              :return path to and position of a found tile
          """
 
-        rew, done, info = self.game.do_it(38, None)  # esc, per evitare strane situe
+        rew, done, info = self.game.do_it(nh.Command.ESC)  # esc, per evitare strane situe
         if not done:
-            rew, done, info = self.game.do_it(75, None)  # search per aspettare con value
+            rew, done, info = self.game.do_it(nh.Command.SEARCH)  # search per aspettare con value
             agent = self.game.get_agent_position()
             message = self.game.get_parsed_message()
             if message.__contains__("hit") or \

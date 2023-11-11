@@ -72,7 +72,7 @@ class GameWhisperer:
         self.agent_id = self.glyph_obs[self.a_yx[0]][self.a_yx[1]]
         self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
         self.safe_play = False
-        self.strict_safe_play = False # when the strategy provides for strict safety
+        self.strict_safe_play = False  # when the strategy provides for strict safety
         self.recently_ejected = False
         self.last_monster_searched = (-1, -1, 0)
         self.monster_exception = []
@@ -143,6 +143,13 @@ class GameWhisperer:
                 if self.is_a_monster(y, x):
                     self.calculate_risk(y, x)
 
+    def update_inv(self):
+        self.inv_obs = Inventory(
+                self.current_obs['inv_letters'],
+                self.current_obs['inv_oclasses'],
+                self.current_obs['inv_glyphs'],
+                self.current_obs['inv_strs'])
+
     def update_obs(self):
         """
             function that update every possible version of the observation space
@@ -169,7 +176,7 @@ class GameWhisperer:
             :param obs: given observation space
         """
 
-        for i in range(-2,3):
+        for i in range(-2, 3):
             print("   ".join(str(obs[self.a_yx[0] + i][self.a_yx[1] + j]) for j in range(-2,3)))
 
     def debug_crop(self):
@@ -250,7 +257,6 @@ class GameWhisperer:
             :param condition: condition function to consider
         """
 
-
         frontier = list()
         looked_mat = [[0 for _ in range(self.size_x)] for _ in range(self.size_y)]
         current = (self.a_yx[0], self.a_yx[1])
@@ -266,7 +272,7 @@ class GameWhisperer:
             nbh = self.neighbors_8_dir(current[0], current[1])
 
             for next_tile in nbh:
-                if looked_mat[next_tile[0]][next_tile[1]] == 0 and not frontier.__contains__(next_tile):
+                if looked_mat[next_tile[0]][next_tile[1]] == 0 and next_tile not in frontier:
                     frontier.append(next_tile)
             if len(frontier) > 0:
                 current = frontier.pop(0)
@@ -487,7 +493,7 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and wallside, FALSE -> elsewise
         """
 
-        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y, x):
             if (self.char_obs[nhb_y][nhb_x] == 124 or self.char_obs[nhb_y][nhb_x] == 45) and \
                     self.color_obs[nhb_y][nhb_x] == 7 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
@@ -503,7 +509,7 @@ class GameWhisperer:
             :return: TRUE -> if given tile is unsearched and near an unknown tile, FALSE -> elsewise
         """
 
-        for (nhb_y, nhb_x) in self.neighbors_4_dir(y,x):
+        for (nhb_y, nhb_x) in self.neighbors_4_dir(y, x):
             if self.char_obs[nhb_y][nhb_x] == 32 and self.search_map[nhb_y][nhb_x] == 0:
                 return True
         return False
@@ -662,11 +668,7 @@ class GameWhisperer:
 
             :return: a string containing the parsed message
         """
-
-        parsed_string = ""
-        for c in self.message:
-            parsed_string = parsed_string + chr(c)
-        return parsed_string
+        return bytes(self.message).decode().strip('\0')
 
     def parse_all(self):
         """
@@ -682,164 +684,119 @@ class GameWhisperer:
                 parsed_string = parsed_string + chr(c)
         return parsed_string
 
-    def yes(self):
-        """
-            function that perform the action "yes" of NetHack
+    def type_text(self, text):
+        for k in text:
+            self.current_obs, rew, done, info = self.env.step(nh.ACTIONS.index(ord(k)))
+        return rew, done, info
 
-            :return: //
-        """
 
-        if self.update_agent():
-            self.current_obs, rew, done, info = self.env.step(7)
-        self.update_obs()
-
-    def no(self):
-        """
-            function that perform the action "no" of NetHack
-
-            :return: //
-        """
-
-        if self.update_agent():
-            self.current_obs, rew, done, info = self.env.step(5)
-        self.update_obs()
-
-    def more(self):
-        """
-            function that perform the action "more" of NetHack
-            :return: //
-        """
-
-        if self.update_agent():
-            self.current_obs, rew, done, info = self.env.step(19)
-        self.update_obs()
-
-    #old version, working
-    def do_it(self, x, direction):
+    # new version, tested
+    def do_it(self, action, action_iterable=None):
         """
             function for sending input to the game terminal.
             It offers the management of specific cases, automating some actions.
-            ex: Engraving Elbereth
-            :param x: numeric value of the action to be performed according to the NLE implementation
-            :param direction: optional value useful when some actions require a direction to be performed
+            :param action: action to be performed. Must be a character or an action in nle.nethack.ACTIONS
+            :param action_iterable: optional iterable useful when other actions have to be performed
             :return: the "reward" value (1 if episode success, 0 elsewise),
                      the "done" value (TRUE if the episode endend, FALSE elsewise),
                      the "info" object containg extra information (Gym standard implementation)
         """
 
         # print(self.bl_stats)
-        self.old_turn = self.bl_stats[20]
+        self.old_turn = self.bl_stats.time
         rew = 0
         done = False
         info = None
 
+        if self.update_agent():
+            self.current_obs, rew, done, info = self.env.step(38)
+            self.update_obs()
+
+            # observations.append(numpy.concatenate((game.current_obs['chars'], game.current_obs['colors']), axis=None))
+
+        def to_action_index(action):
+            if isinstance(action, str):
+                assert len(action) == 1, action
+                action = ord(action)
+            return nh.ACTIONS.index(action)
+
+        self.single_step(to_action_index(action))
+        if action_iterable:
+            for a in action_iterable:
+                rew, done, info = self.single_step(to_action_index(a))
+        return rew, done, info
+
+    def single_step(self, action_index):
+        rew = 0
+        done = False
+        info = None
         if not self.fast_mode:
-            print("pray_timeout: ", abs(self.last_pray - self.bl_stats[20]))
-        if self.bl_stats[20] % 100 == 0:
-            print("current score: ", self.bl_stats[9], " turn: ",
-                  self.bl_stats[20], " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
+            print("pray_timeout: ", abs(self.last_pray - self.bl_stats.time))
+        if self.bl_stats.time % 100 == 0:
+            print("current score: ", self.bl_stats.score, " turn: ",
+                  self.bl_stats.time, " time: ", time.localtime()[3], ":", time.localtime()[4], "  -")
             go_back(2)
 
-        if abs(self.bl_stats[20] - self.pet_alive_turn) > 10 and self.bl_stats[20] > 2000:
+        if abs(self.bl_stats.time - self.pet_alive_turn) > 10 and self.bl_stats.time > 2000:
             self.pet_alive = False
 
         if self.act_num % 50 == 0:  # modifica
             self.panic = False
 
         if self.ran:
-            if abs(self.ran_turn - self.bl_stats[20]) > self.ran_cooldown:
+            if abs(self.ran_turn - self.bl_stats.time) > self.ran_cooldown:
                 self.ran = False
 
-        if self.parsed_message.__contains__("Closed for inventory"):
-            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                    self.shop_tiles.append(tile)
-
-        if self.update_agent():
-            self.current_obs, rew, done, info = self.env.step(38)
-            self.update_obs()
-
-            if self.parsed_message.__contains__("Closed for inventory"):
-                for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                    if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                        self.shop_tiles.append(tile)
-                #observations.append(numpy.concatenate((game.current_obs['chars'], game.current_obs['colors']), axis=None))
-
-        if self.score < self.bl_stats[9]:
-            self.score = self.bl_stats[9]
+        if self.score < self.bl_stats.score:
+            self.score = self.bl_stats.score
 
         if self.parsed_message.__contains__("Hello stranger, who are you?"):  # respond Croesus
             self.guard_encounter += 1
             return -1, True, None
-
+        '''
         if self.update_agent():
             self.current_obs, rew, done, info = self.env.step(38)
         self.update_obs()
+        '''
 
         if self.update_agent():
-            self.current_obs, rew, done, info = self.env.step(x)
+            self.current_obs, rew, done, info = self.env.step(action_index)
         self.update_obs()
 
-        if self.parsed_message.__contains__("swap"):
+        if "swap" in self.parsed_message:
             self.pet_alive = True
-            self.pet_alive_turn = self.bl_stats[20]
-        if direction is not None and self.parsed_message.__contains__("In what direction?"):
-            self.current_obs, rew, done, info = self.env.step(direction)
-            self.update_obs()
+            self.pet_alive_turn = self.bl_stats.time
 
         if self.parsed_message.__contains__("Are you sure you want to pray?") or self.parsed_message.__contains__(
                 "Really attack"):
-            self.yes()
+            self.type_text("y")
         if self.parsed_message.__contains__("You are carrying too much to get through."):
-            next_tile = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], x)
+            next_tile = self.inverse_move_translator(self.a_yx[0], self.a_yx[1], action_index)
             self.exception.append(next_tile)
             self.update_obs()
-        if self.parsed_message.__contains__("What do you want to write with?"):
-            self.current_obs, rew, done, info = self.env.step(106)  # -
-            self.update_obs()
-        if self.parsed_message.__contains__("Do you want to add to the current engraving?"):
-            self.no()
-        if self.parsed_message.__contains__("You wipe out the message that was written in the dust here."):
-            self.no()
-        if self.parsed_message.__contains__("You write in the dust with your fingertip."):
-            self.more()
-        if self.parsed_message.__contains__("What do you want to write in the dust here?"):
-            self.current_obs, rew, done, info = self.env.step(36)  # E
-            self.current_obs, rew, done, info = self.env.step(1)  # l
-            self.current_obs, rew, done, info = self.env.step(6)  # b
-            self.current_obs, rew, done, info = self.env.step(35)  # e
-            self.current_obs, rew, done, info = self.env.step(67)  # r
-            self.current_obs, rew, done, info = self.env.step(35)  # e
-            self.current_obs, rew, done, info = self.env.step(91)  # t
-            self.current_obs, rew, done, info = self.env.step(3)  # h
-            self.more()
-            self.update_obs()
-
-        if self.parsed_message.__contains__("You swap places"):
-            self.pet_alive = True
 
         if self.parsed_message.__contains__("Closed for inventory"):
-            for tile in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
-                if self.char_obs[tile[0]][tile[1]] == 43 and self.color_obs[tile[0]][tile[1]] == 3:
-                    self.shop_tiles.append(tile)
+            for ty, tx in self.neighbors_4_dir(self.a_yx[0], self.a_yx[1]):
+                if self.char_obs[ty][tx] == ord('+') and self.color_obs[ty][tx] == 3:
+                    self.shop_tiles.append((ty, tx))
 
         if ((self.parsed_message.__contains__("Welcome") and self.parsed_message.__contains__(
                 "\"")) or self.parsed_message.__contains__("\"How dare you break my door?\"")) \
-                and not 0 <= self.bl_stats[20] <= 5:
+                and not 0 <= self.bl_stats.time <= 5:
             self.shop_propagation(self.a_yx)
 
-        if self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) <= 0.5 and not self.safe_play:
+        if self.bl_stats.max_hitpoints != 0 and (self.bl_stats.hitpoints / self.bl_stats.max_hitpoints) <= 0.5 and not self.safe_play:
             if not self.fast_mode:
                 print("SAFE_MODE : enabled")
             self.safe_play = True
-        elif self.bl_stats[11] != 0 and (self.bl_stats[10] / self.bl_stats[11]) > 0.85 and self.safe_play:
+        elif self.bl_stats.max_hitpoints != 0 and (self.bl_stats.hitpoints / self.bl_stats.max_hitpoints) > 0.85 and self.safe_play:
             if not self.fast_mode:
                 print("SAFE_MODE : disabled")
             self.safe_play = False
         self.act_num += 1
         if self.update_agent():
             self.memory[self.a_yx[0]][self.a_yx[1]] = self.act_num
-            if x == 75:  # it was a search
+            if nh.ACTIONS[action_index] == nh.Command.SEARCH:
                 self.search_map[self.a_yx[0]][self.a_yx[1]] = 1
                 for next_tile in self.neighbors_8_dir(self.a_yx[0], self.a_yx[1]):
                     self.search_map[next_tile[0]][next_tile[1]] = 1
@@ -889,24 +846,24 @@ class GameWhisperer:
 
         if to_y > from_y:  # la y del next è maggiore -> movimenti verso sud
             if to_x > from_x:
-                move = 5  # se
+                move = nh.CompassDirection.SE
             elif to_x == from_x:
-                move = 2  # s
+                move = nh.CompassDirection.S
             else:
-                move = 6  # sw
+                move = nh.CompassDirection.SW
 
         elif to_y == from_y:  # la y del next è uguale -> movimenti verso est ed ovest
             if to_x > from_x:
-                move = 1  # e
+                move = nh.CompassDirection.E  # e
             else:
-                move = 3  # w
+                move = nh.CompassDirection.W  # w
         else:  # la y del next è minore -> movimenti verso nord
             if to_x > from_x:
-                move = 4  # ne
+                move = nh.CompassDirection.NE  # ne
             elif to_x == from_x:
-                move = 0  # n
+                move = nh.CompassDirection.N  # n
             else:
-                move = 7  # nw
+                move = nh.CompassDirection.NW  # nw
 
         return move
 
@@ -922,21 +879,21 @@ class GameWhisperer:
             :return: y and x value of the destination tile
         """
 
-        if direction == 0:
+        if direction == nh.CompassDirection.N:
             return from_y - 1, from_x
-        elif direction == 4:
+        elif direction == nh.CompassDirection.NE:
             return from_y - 1, from_x + 1
-        elif direction == 1:
+        elif direction == nh.CompassDirection.E:
             return from_y, from_x + 1
-        elif direction == 5:
+        elif direction == nh.CompassDirection.SE:
             return from_y + 1, from_x + 1
-        elif direction == 2:
+        elif direction == nh.CompassDirection.S:
             return from_y + 1, from_x
-        elif direction == 6:
+        elif direction == nh.CompassDirection.SW:
             return from_y + 1, from_x - 1
-        elif direction == 3:
+        elif direction == nh.CompassDirection.W:
             return from_y, from_x - 1
-        elif direction == 7:
+        elif direction == nh.CompassDirection.NW:
             return from_y - 1, from_x - 1
 
     def reset_game(self):
@@ -1257,32 +1214,32 @@ class DungeonWalker:
                     # next node is the goal and must not be reached diagonally
                     if next_tile[0] > cursor[0] and next_tile[1] > cursor[1]:  # y and x greater -> se
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
-                            yellow_brick_road.append(2)  # s
-                            yellow_brick_road.append(1)  # e
+                            yellow_brick_road.append(nh.CompassDirection.S)  # s
+                            yellow_brick_road.append(nh.CompassDirection.E)  # e
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
-                            yellow_brick_road.append(1)  # e
-                            yellow_brick_road.append(2)  # s
+                            yellow_brick_road.append(nh.CompassDirection.E)  # e
+                            yellow_brick_road.append(nh.CompassDirection.S)  # s
                     elif next_tile[0] > cursor[0] and next_tile[1] < cursor[1]:  # y greater and x smaller -> sw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
-                            yellow_brick_road.append(2)  # s
-                            yellow_brick_road.append(3)  # w
+                            yellow_brick_road.append(nh.CompassDirection.S)  # s
+                            yellow_brick_road.append(nh.CompassDirection.W)  # w
                         elif self.game.is_walkable(cursor[0] + 1, cursor[1]):
-                            yellow_brick_road.append(3)  # w
-                            yellow_brick_road.append(2)  # s
+                            yellow_brick_road.append(nh.CompassDirection.W)  # w
+                            yellow_brick_road.append(nh.CompassDirection.S)  # s
                     elif next_tile[0] < cursor[0] and next_tile[1] < cursor[1]:  # y smaller and x greater -> nw
                         if self.game.is_walkable(cursor[0], cursor[1] - 1):
-                            yellow_brick_road.append(0)  # n
-                            yellow_brick_road.append(3)  # w
+                            yellow_brick_road.append(nh.CompassDirection.N)  # n
+                            yellow_brick_road.append(nh.CompassDirection.W)  # w
                         elif self.game.is_walkable(cursor[0] - 1, cursor[1]):
-                            yellow_brick_road.append(3)  # w
-                            yellow_brick_road.append(0)  # n
+                            yellow_brick_road.append(nh.CompassDirection.W)  # w
+                            yellow_brick_road.append(nh.CompassDirection.N)  # n
                     elif next_tile[0] < cursor[0] and next_tile[1] > cursor[1]:  # y smaller and x smaller -> ne
                         if self.game.is_walkable(cursor[0], cursor[1] + 1):
-                            yellow_brick_road.append(0)  # n
-                            yellow_brick_road.append(1)  # e
+                            yellow_brick_road.append(nh.CompassDirection.N)  # n
+                            yellow_brick_road.append(nh.CompassDirection.E)  # e
                         elif self.game.is_walkable(cursor[0] - 1, cursor[1]):
-                            yellow_brick_road.append(1)  # e
-                            yellow_brick_road.append(0)  # n
+                            yellow_brick_road.append(nh.CompassDirection.E)  # e
+                            yellow_brick_road.append(nh.CompassDirection.N)  # n
 
                 yellow_brick_road.append(self.game.move_translator(cursor[0], cursor[1], next_tile[0], next_tile[1]))
             next_tile = cursor
@@ -1358,7 +1315,7 @@ def main_logic(dungeon_walker, game, skills_prio, skill_map, attempts):
     for i in range(0, attempts):
 
         if game.get_fast_mode():
-            if game.get_act_num != 0 and i != 0:
+            if game.get_act_num() != 0 and i != 0:
                 scores.append(game.get_actual_score())
                 size = len(scores)
                 center = math.floor(size / 2)
@@ -1413,7 +1370,7 @@ def main_logic(dungeon_walker, game, skills_prio, skill_map, attempts):
                     game.reset_memory()
                 game.hard_search()
                 game.increment_hard_search_num()
-                rew, done, info = game.do_it(75, None)  # search per aspettare con value
+                rew, done, info = game.do_it(nh.Command.SEARCH)  # search per aspettare con value
             else:
                 rew, done, info = skill_map[skill].execution(path, arg1, agent, stats)
 

@@ -1,3 +1,5 @@
+import nle.nethack as nh
+
 # abstract class for every possible type of skill
 class Skill:
     def __init__(self, dungeon_walker, game, skill_name):
@@ -80,9 +82,9 @@ class Skill:
                                                                                                        next_tile[1]):  # se la prossima casella contiene del cibo
                     for k in range(0, 10):
                         # modifica 1.1
-                        self.game.do_it(96, action)  # untrap
+                        self.game.do_it(nh.Command.UNTRAP, action)  # untrap
                 if self.game.is_walkable(next_tile[0], next_tile[1]):
-                    rew, done, info = self.game.do_it(action, None)
+                    rew, done, info = self.game.do_it(action)
                 else:
                     return -1, False, None  # failure
             else:
@@ -90,12 +92,12 @@ class Skill:
                 done = True
                 break
             message = self.game.get_parsed_message()
-            if any(message.__contains__(m) for m in ["It's solid stone.",
-                                                     "It's a wall.",
-                                                     "You can't move diagonally into an intact doorway.",
-                                                     "You try to move the boulder, but in vain.",
-                                                     "Perhaps that's why you cannot move it.",
-                                                     "You hear a monster behind the boulder."]):
+            if any(m in message for m in ["It's solid stone.",
+                                          "It's a wall.",
+                                          "You can't move diagonally into an intact doorway.",
+                                          "You try to move the boulder, but in vain.",
+                                          "Perhaps that's why you cannot move it.",
+                                          "You hear a monster behind the boulder."]):
                 self.game.append_exception(next_tile)
                 return -1, False, None  # failure
             if self.eject_button():
