@@ -17,7 +17,7 @@ class HiddenRoom(HiddenSkill):
                        arg1 -> extra optional output (target's coordinates in this case)
         """
 
-        if 3 <= stats[21] <= 4:
+        if 3 <= stats.hunger_state <= 4:
             return None, None, None
         path, coords = self.unsearched_plan([(46, 7)], safe_play)
         if path is None or len(path) == 0:
@@ -42,7 +42,7 @@ class HiddenCorridor(HiddenSkill):
                        arg1 -> extra optional output (target's coordinates in this case)
         """
 
-        if 3 <= stats[21] <= 4:
+        if 3 <= stats.hunger_state <= 4:
             return None, None, None
         path, coords = self.unsearched_plan([(35, 7)], safe_play)
         if path is None or len(path) == 0:

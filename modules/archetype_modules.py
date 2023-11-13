@@ -1,3 +1,5 @@
+import nle.nethack as nh
+
 # abstract class for every possible type of skill
 class Skill:
     def __init__(self, dungeon_walker, game, skill_name):
@@ -80,9 +82,9 @@ class Skill:
                                                                                                        next_tile[1]):  # se la prossima casella contiene del cibo
                     for k in range(0, 10):
                         # modifica 1.1
-                        self.game.do_it(96, action)  # untrap
+                        self.game.do_it(nh.Command.UNTRAP, [action])  # untrap
                 if self.game.is_walkable(next_tile[0], next_tile[1]):
-                    rew, done, info = self.game.do_it(action, None)
+                    rew, done, info = self.game.do_it(action)
                 else:
                     return -1, False, None  # failure
             else:
@@ -90,12 +92,12 @@ class Skill:
                 done = True
                 break
             message = self.game.get_parsed_message()
-            if any(message.__contains__(m) for m in ["It's solid stone.",
-                                                     "It's a wall.",
-                                                     "You can't move diagonally into an intact doorway.",
-                                                     "You try to move the boulder, but in vain.",
-                                                     "Perhaps that's why you cannot move it.",
-                                                     "You hear a monster behind the boulder."]):
+            if any(m in message for m in ["It's solid stone.",
+                                          "It's a wall.",
+                                          "You can't move diagonally into an intact doorway.",
+                                          "You try to move the boulder, but in vain.",
+                                          "Perhaps that's why you cannot move it.",
+                                          "You hear a monster behind the boulder."]):
                 self.game.append_exception(next_tile)
                 return -1, False, None  # failure
             if self.eject_button():
@@ -112,19 +114,15 @@ class Skill:
             :return TRUE -> if condition is verified, FALSE -> elsewise
         """
 
-        if (args.__contains__((self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1]))) or
-            ((self.game.get_char(tile[0], tile[1]) == 36 or
-              (self.game.get_char(tile[0], tile[1]) == 37 and not self.game.check_inedible(
-                  tile))) and args.__contains__((self.game.get_char(tile[0], tile[1]), -1)))) and \
-                not (self.game.check_exception(tile) and self.game.get_char(tile[0], tile[1]) == 43) and \
-                (self.game.get_memory(tile[0], tile[1]) == -1 or
-                 abs(self.game.get_memory(tile[0], tile[1]) - self.game.get_act_num()) > self.game.glyph_cooldown(
-                            (self.game.get_char(tile[0], tile[1]), self.game.get_color(tile[0], tile[1])))):
-            return True
-        else:
-            return False
+        char = self.game.get_char(tile[0], tile[1])
+        color = self.game.get_color(tile[0], tile[1])
+        return (args.__contains__((char, color)) or
+            ((char == ord('$') or (char == ord('%') and not self.game.check_inedible(tile))) and args.__contains__((char, -1)))) and \
+            not (self.game.check_exception(tile) and char == ord('+')) and \
+            (self.game.get_memory(tile[0], tile[1]) == -1 or
+             abs(self.game.get_memory(tile[0], tile[1]) - self.game.get_act_num()) > self.game.glyph_cooldown((char, color)))
 
-    # auxiliary method for the seach and pathfinding towards a group of generic goal positions
+    # auxiliary method for the search and pathfinding towards a group of generic goal positions
     def standard_plan(self, glyphs, not_reach_diag, safe_play):
         """
             function for finding a path to a tile given a set of possible objective
@@ -139,11 +137,11 @@ class Skill:
         if found:
             char = self.game.get_char(y, x)
             stats = self.game.get_bl_stats()
-            if char == 60 and not self.custom_contain(self.game.get_stairs_locations()[0], stats[12])[0]:
-                self.game.append_stairs_location((stats[12], y, x), True)
+            if char == ord('<') and not self.custom_contain(self.game.get_stairs_locations()[0], stats.depth)[0]:
+                self.game.append_stairs_location((stats.depth, y, x), True)
 
-            if char == 62 and not self.custom_contain(self.game.get_stairs_locations()[1], stats[12])[0]:
-                self.game.append_stairs_location((stats[12], y, x), False)
+            if char == ord('>') and not self.custom_contain(self.game.get_stairs_locations()[1], stats.depth)[0]:
+                self.game.append_stairs_location((stats.depth, y, x), False)
 
             path = self.dungeon_walker.path_finder(y, x, not_reach_diag, safe_play)
             self.game.update_memory(y, x)
@@ -206,10 +204,10 @@ class HiddenSkill(Skill):
         char = glyph[0]
         color = glyph[1]
         if self.game.get_char(tile[0], tile[1]) == char and self.game.get_color(tile[0], tile[1]) == color:
-            if char == 46:
+            if char == ord('.'):
                 if self.game.is_unsearched_wallside(tile[0], tile[1]):
                     return True
-            elif char == 35 and color == 7:
+            elif char == ord('#') and color == 7:
                 if self.game.is_unsearched_voidside(tile[0], tile[1]):
                     return True
         return False
@@ -251,10 +249,10 @@ class HiddenSkill(Skill):
                 if not self.game.get_fast_mode():
                     print(self.name, " try: ", j)
 
-                if 3 <= stats[21] <= 4:
+                if 3 <= stats.hunger_state <= 4:
                     break
 
-                rew, done, info = self.game.do_it(75, None)  # search
+                rew, done, info = self.game.do_it(nh.Command.SEARCH)  # search
                 stats = self.game.get_bl_stats()
                 j += 1
         return rew, done, info
