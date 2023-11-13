@@ -720,7 +720,7 @@ class GameWhisperer:
                 action = ord(action)
             return nh.ACTIONS.index(action)
 
-        self.single_step(to_action_index(action))
+        rew, done, info = self.single_step(to_action_index(action))
         if action_iterable:
             for a in action_iterable:
                 rew, done, info = self.single_step(to_action_index(a))
