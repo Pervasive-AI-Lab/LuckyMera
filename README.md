@@ -16,6 +16,7 @@ It is well-suited to try both symbolic modules and neural ones, giving also the 
 ## Installation
 
 LuckyMera needs essentially only ```nle``` to work properly.
+To make the inventory skills aviable, there are also the optional dependencies ```swi-prolog``` and ```pyswip```
 
 Optionally, [```nle_language_wrapper```](https://github.com/Pervasive-AI-Lab/nle-language-wrapper) is needed if you want text observations, while, if you want to use our implementation of the Behavioral Cloning algorithm, you need to install ```stable_baselines3``` and ```pytorch```.
 
