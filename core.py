@@ -39,7 +39,7 @@ class GameWhisperer:
         try:
             from game_items.item_manager_sk import Item_manager_sk
             self.item_manager = Item_manager_sk('game_items/objects.pl')
-        except ImportError:
+        except Exception:
             print("pyswip or prolog is not present, in-game item management is disabled")
         self.env = env
         self.a_yx = [-1, -1]
