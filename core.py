@@ -36,6 +36,11 @@ BLStats = namedtuple('BLStats', 'x y strength_percentage strength dexterity cons
 class GameWhisperer:
 
     def __init__(self, env, fast_mode, saver, filename):
+        try:
+            from game_items.item_manager_sk import Item_manager_sk
+            self.item_manager = Item_manager_sk('game_items/objects.pl')
+        except ImportError:
+            print("pyswip or prolog is not present, in-game item management is disabled")
         self.env = env
         self.a_yx = [-1, -1]
         self.walkable_glyphs = [(x, -1) for x in b'!"$%()*./<=>?[\\]`u'] + \
@@ -953,6 +958,9 @@ class GameWhisperer:
         self.shop_tiles = []
         self.inedible = []
 
+    def get_items_by_class(self, oc_class):
+        return (i for i,c in enumerate(self.inv_obs.classes) if c == oc_class)
+    
     def get_elbereth_violation(self):
         return self.elbereth_violated
 
@@ -1054,9 +1062,6 @@ class GameWhisperer:
 
     def get_bl_stats(self):
         return self.bl_stats
-
-    def get_inv_item_letters(self, regexp):
-        pass
 
     def get_safe_play(self):
         return self.safe_play
