@@ -256,3 +256,20 @@ class HiddenSkill(Skill):
                 stats = self.game.get_bl_stats()
                 j += 1
         return rew, done, info
+
+class InventorySkill(Skill):
+    def __init__(self, dungeon_walker, game, skill_name):
+        if not hasattr(game, 'item_manager'):
+            self.disabled = True
+        else:
+            self.disabled = False
+            super().__init__(dungeon_walker, game, skill_name)
+
+    def planning(self, stats, safe_play, agent):
+        if self.disabled:
+            return None, None, None
+        item_idx = self.item_planning(stats, safe_play, agent)
+        if item_idx == -1:
+            return None, None, None
+        else:
+            return self.name, None, item_idx
