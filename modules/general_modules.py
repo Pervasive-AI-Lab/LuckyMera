@@ -993,16 +993,16 @@ class Eat(Skill):
             if message.__contains__("corpse") and \
                     not (message.__contains__("lichen") or message.__contains__("lizard")):
                 if not self.fresh_food():
-                    self.game.no()
+                    self.game.type_text("n")
                     self.game.append_inedible((arg1[0], arg1[1]))  # temporaneo
             elif message.__contains__("eat") and message.__contains__("?"):
-                self.game.yes()
+                self.game.type_text("y")
                 gnam = True
         elif self.fresh_food():
             self.game.do_it(nh.Command.EAT)  # eat
             message = self.game.get_parsed_message()
             if message.__contains__("eat") and message.__contains__("?"):
-                self.game.yes()
+                self.game.type_text("y")
                 gnam = True
         #elif stats.hunger_state == 4:
             #self.game.reset_inedible()

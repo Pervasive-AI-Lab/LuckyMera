@@ -3,7 +3,7 @@ import json
 import time
 import argparse
 import gym
-from modules import general_modules, reach_modules, secret_passage_modules
+from modules import general_modules, reach_modules, secret_passage_modules, inventory_modules
 from core import Saver, GameWhisperer, DungeonWalker, main_logic
 from nle import nethack
 
@@ -44,6 +44,7 @@ def start_bot(env, saver, filename):
         if hasattr(general_modules, skill_name): skill_class = getattr(general_modules, skill_name)
         elif hasattr(reach_modules, skill_name): skill_class = getattr(reach_modules, skill_name)
         elif hasattr(secret_passage_modules, skill_name): skill_class = getattr(secret_passage_modules, skill_name)
+        elif hasattr(inventory_modules, skill_name): skill_class = getattr(inventory_modules, skill_name)
         else: sys.exit('skill not found')
 
         skill_modules_map[skill_name] = skill_class(walk_logic, game_interface, skill_name)

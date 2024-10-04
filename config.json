@@ -1,6 +1,4 @@
 {"skill_prio_list": [
-
-"RandomWalk",
 "Pray",
 "Eat",
 "Elbereth",
@@ -8,13 +6,16 @@
 "Break",
 "Fight",
 "Gold",
+"WearBestArmor",
+"DrinkId",
 "StairsDescent",
 "StairsAscent",
 "ExploreClosest",
 "Horizon",
 "Unseen",
 "HiddenRoom",
-"HiddenCorridor"
+"HiddenCorridor",
+"RandomWalk"
 ],
 
 "fast_mode": "on",
